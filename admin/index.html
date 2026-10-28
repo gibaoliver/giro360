@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CMS Giro 360 | Painel Administrativo</title>
+  <title>CMS Giro 360 | Acesso Administrativo</title>
   
   <!-- Fontes Google: Inter & Roboto -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,7 +41,6 @@
     body {
       font-family: 'Roboto', 'Inter', system-ui, sans-serif;
     }
-    /* Estilização da barra de rolagem */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #f1f5f9; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
@@ -55,548 +54,645 @@
     }
   </style>
 </head>
-<body class="bg-[#F1F5F9] text-slate-800 min-h-screen flex flex-col antialiased">
+<body class="bg-[#0F172A] text-slate-800 min-h-screen flex flex-col antialiased">
 
   <!-- ======================================================= -->
-  <!-- TOPBAR SUPERIOR (Igual ao print: Logo + Menu + Admin)   -->
+  <!-- 1. TELA DE LOGIN / AUTENTICAÇÃO SUPABASE                -->
   <!-- ======================================================= -->
-  <header class="bg-cms-topbar text-white h-14 flex items-center justify-between px-4 sticky top-0 z-50 shadow-sm border-b border-slate-700">
-    <div class="flex items-center gap-4">
-      <!-- Logo NASOFTWARE / GIRO 360 -->
-      <div class="flex items-center gap-2 font-black text-sm tracking-widest text-slate-100">
-        <span class="w-6 h-6 rounded bg-cms-accentCyan flex items-center justify-center text-slate-900 font-black text-xs">
-          ◈
-        </span>
-        <span>NASOFTWARE</span>
-        <span class="text-[10px] text-cyan-400 font-bold bg-cyan-950 px-1.5 py-0.5 rounded ml-1">GIRO 360</span>
-      </div>
-
-      <!-- Botão Hambúrguer para encolher menu lateral -->
-      <button id="toggleSidebarBtn" class="text-slate-300 hover:text-white p-1.5 rounded transition">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-      </button>
-    </div>
-
-    <!-- Usuário Admin à Direita -->
-    <div class="flex items-center gap-3">
-      <!-- Indicador Supabase -->
-      <button onclick="openSupabaseModal()" id="supabaseStatusBadge" class="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 transition" title="Configurar conexão com o Supabase">
-        <span id="supabaseStatusDot" class="w-2 h-2 rounded-full bg-amber-400"></span>
-        <span id="supabaseStatusText">Supabase Local</span>
-      </button>
-
-      <!-- Perfil Admin Dropdown -->
-      <div class="relative">
-        <button id="adminDropdownBtn" class="flex items-center gap-2 text-sm text-slate-200 hover:text-white py-1 px-2 rounded transition">
-          <div class="w-7 h-7 rounded-full bg-cyan-500 text-slate-950 font-bold flex items-center justify-center text-xs shadow">
-            N
-          </div>
-          <span class="text-xs font-semibold">Admin ▾</span>
-        </button>
-
-        <div id="adminDropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-slate-200 text-slate-700 text-xs py-1.5 z-50">
-          <a href="../index.html" target="_blank" class="block px-4 py-2 hover:bg-slate-100">🌐 Ver Portal Público</a>
-          <button onclick="openSupabaseModal()" class="w-full text-left px-4 py-2 hover:bg-slate-100">⚙ Configurações Supabase</button>
-          <div class="border-t border-slate-100 my-1"></div>
-          <a href="../index.html" class="block px-4 py-2 hover:bg-rose-50 text-rose-600 font-semibold">Sair do Painel</a>
-        </div>
-      </div>
-    </div>
-  </header>
-
-  <!-- ======================================================= -->
-  <!-- CORPO PRINCIPAL: SIDEBAR ESQUERDA + ÁREA DE CONTEÚDO    -->
-  <!-- ======================================================= -->
-  <div class="flex flex-1 overflow-hidden">
-    
-    <!-- SIDEBAR LATERAL (Conforme o print) -->
-    <aside id="sidebar" class="w-64 bg-cms-sidebar text-slate-300 flex flex-col shrink-0 transition-all duration-300 border-r border-slate-800">
+  <div id="authScreen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div class="max-w-md w-full bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-800 shadow-2xl p-8 space-y-6">
       
-      <!-- Card do Usuário Logado -->
-      <div class="p-4 border-b border-slate-800/80 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-cyan-600/80 text-white font-bold flex items-center justify-center text-sm shadow">
-            N
-          </div>
-          <div>
-            <div class="font-bold text-sm text-white leading-tight">Admin</div>
-            <div class="text-[11px] text-slate-400">Administrador</div>
-          </div>
+      <!-- Cabeçalho do Login -->
+      <div class="text-center space-y-2">
+        <div class="inline-flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/80 mb-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+          <span class="text-[11px] font-black tracking-widest text-slate-300">NASOFTWARE • GIRO 360</span>
         </div>
-        <button onclick="openSupabaseModal()" class="text-slate-400 hover:text-white" title="Configurações">
-          ⚙
-        </button>
+        <h1 class="text-2xl font-black text-white tracking-tight">Painel Administrativo</h1>
+        <p class="text-xs text-slate-400">Informe suas credenciais gerenciadas no Supabase para continuar.</p>
       </div>
 
-      <!-- Título Navegação -->
-      <div class="px-4 pt-4 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-        NAVEGAÇÃO
+      <!-- Alerta de Erro -->
+      <div id="loginErrorAlert" class="hidden p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-medium">
+        E-mail ou senha incorretos.
       </div>
 
-      <!-- Lista de Menus da Sidebar (Exatamente como o print) -->
-      <nav class="flex-1 px-2 space-y-0.5 text-xs overflow-y-auto">
-        <button onclick="switchView('dashboard')" id="navItemDashboard" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-white bg-slate-800 font-medium transition">
-          <span class="text-sm">🏠</span>
-          <span>Home</span>
-        </button>
-
-        <button onclick="switchView('posts_list')" id="navItemNoticias" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
-          <span class="text-sm">📰</span>
-          <span>Notícias</span>
-        </button>
-
-        <button onclick="switchView('new_post')" id="navItemNovaPostagem" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
-          <span class="text-sm">📝</span>
-          <span>Criar / Editar Post</span>
-        </button>
-
-        <button onclick="alert('Módulo de Categorias: Política, Economia, Tecnologia, Esportes e Entretenimento sincronizados no Supabase.')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
-          <span class="text-sm">🏷️</span>
-          <span>Categorias</span>
-        </button>
-
-        <button onclick="alert('Importação RSS: Permite ler feeds de agências de notícias e carregar matérias automaticamente.')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
-          <span class="text-sm">☁️</span>
-          <span>Importação RSS</span>
-        </button>
-
-        <button onclick="alert('Módulo de Banners e Anúncios de Patrocinadores.')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
-          <span class="text-sm">📢</span>
-          <span>Anúncios</span>
-        </button>
-
-        <button onclick="alert('Biblioteca de Imagens e Galeria de Mídia do Supabase Storage.')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
-          <span class="text-sm">🖼️</span>
-          <span>Imagens</span>
-        </button>
-
-        <button onclick="alert('Módulo de Redes Sociais: Configuração de links de WhatsApp, Instagram e YouTube.')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
-          <span class="text-sm">👥</span>
-          <span>Redes sociais</span>
-        </button>
-
-        <button onclick="alert('Textos institucionais do Sobre Nós e Mensagens recebidas no formulário de contato.')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
-          <span class="text-sm">📝</span>
-          <span>Textos e contatos</span>
-        </button>
-
-        <button onclick="alert('Lista de assinantes cadastrados no Boletim Matinal / Newsletter.')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
-          <span class="text-sm">✉️</span>
-          <span>News Letter</span>
-        </button>
-
-        <button onclick="openSupabaseModal()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
-          <span class="text-sm">⚡</span>
-          <span>Configurar Supabase</span>
-        </button>
-      </nav>
-
-      <!-- Rodapé Sidebar -->
-      <div class="p-3 text-[10px] text-slate-500 border-t border-slate-800 text-center">
-        Giro 360 CMS v2.4 • Supabase Ready
-      </div>
-    </aside>
-
-    <!-- ÁREA DE CONTEÚDO (À Direita) -->
-    <main class="flex-1 overflow-y-auto bg-slate-100 p-4 sm:p-6">
-      
-      <!-- ======================================================= -->
-      <!-- TELA 1: HOME - DASHBOARD (Conforme o Print 1)            -->
-      <!-- ======================================================= -->
-      <section id="viewDashboard" class="space-y-6">
-        
-        <!-- Header da Página no Conteúdo -->
-        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div class="flex items-center gap-2 text-slate-800 font-bold text-lg">
-              <span class="text-cms-accentCyan">⊕</span>
-              <span>Home - Dashboard</span>
-            </div>
-            <div class="text-xs text-slate-400 mt-0.5">
-              <span>Home</span> / <span class="text-slate-600 font-medium">Dashboard</span>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <button onclick="switchView('new_post')" class="px-3.5 py-1.5 rounded border border-cyan-600 text-cyan-700 bg-cyan-50 hover:bg-cyan-100 text-xs font-semibold flex items-center gap-1.5 transition">
-              <span>📝</span> Nova postagem
-            </button>
-            <button onclick="alert('Relatório de Analytics: Total de visualizações sincronizadas em tempo real.')" class="px-3.5 py-1.5 rounded border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 text-xs font-semibold flex items-center gap-1.5 transition">
-              <span>📊</span> Analytics
-            </button>
-            <button onclick="switchView('posts_list')" class="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-800">
-              Meus dados ▾
-            </button>
-          </div>
-        </div>
-
-        <!-- Banner Informativo de Conexão com Supabase -->
-        <div id="supabaseNoticeBox" class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-4 rounded-xl shadow-sm border border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 font-black flex items-center justify-center text-xl shrink-0">
-              ⚡
-            </div>
-            <div>
-              <h4 class="font-bold text-sm text-slate-100">Banco de Dados Supabase Pronto para Conexão</h4>
-              <p class="text-xs text-slate-400">O script SQL <code class="text-cyan-300 font-mono">supabase-setup.sql</code> foi gerado. Conecte sua URL e chave para postar diretamente na nuvem.</p>
-            </div>
-          </div>
-          <button onclick="openSupabaseModal()" class="px-4 py-2 bg-cms-accentCyan hover:bg-cyan-600 text-slate-950 font-bold rounded-lg text-xs transition shrink-0 shadow">
-            Conectar Chaves Supabase
-          </button>
-        </div>
-
-        <!-- Métricas Rápidas (KPIs) -->
-        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-            <span class="text-[11px] font-bold text-slate-400 uppercase">Notícias Ativas</span>
-            <div id="dashTotalNews" class="text-2xl font-black text-slate-800 mt-1">0</div>
-          </div>
-          <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-            <span class="text-[11px] font-bold text-slate-400 uppercase">Visualizações Acumuladas</span>
-            <div id="dashTotalViews" class="text-2xl font-black text-emerald-600 mt-1">0</div>
-          </div>
-          <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-            <span class="text-[11px] font-bold text-slate-400 uppercase">Comentários</span>
-            <div id="dashTotalComments" class="text-2xl font-black text-cyan-600 mt-1">0</div>
-          </div>
-          <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-            <span class="text-[11px] font-bold text-slate-400 uppercase">Categorias</span>
-            <div class="text-2xl font-black text-purple-600 mt-1">6</div>
-          </div>
-        </div>
-
-        <!-- Tabela Rápida de Notícias Recentes -->
-        <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-          <div class="p-4 border-b border-slate-100 flex items-center justify-between">
-            <h3 class="font-bold text-sm text-slate-800">Últimas Publicações</h3>
-            <button onclick="switchView('new_post')" class="text-xs text-cyan-600 font-bold hover:underline">+ Criar Nova Postagem</button>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[10px]">
-                <tr>
-                  <th class="py-3 px-4">ID</th>
-                  <th class="py-3 px-4">Título da Notícia</th>
-                  <th class="py-3 px-4">Categoria</th>
-                  <th class="py-3 px-4">Data</th>
-                  <th class="py-3 px-4">Views</th>
-                  <th class="py-3 px-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody id="dashNewsTableBody" class="divide-y divide-slate-100">
-                <!-- Inserido dinamicamente via JS -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- ======================================================= -->
-      <!-- TELA 2: POSTAGENS - CRIAÇÃO / EDIÇÃO (Conforme Print 2) -->
-      <!-- ======================================================= -->
-      <section id="viewNewPost" class="hidden space-y-6">
-        
-        <!-- Header da Página -->
-        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <div class="flex items-center gap-2 text-slate-800 font-bold text-lg">
-              <span class="text-cms-accentCyan">⊕</span>
-              <span id="formPageTitle">Postagens - Edição/Criação</span>
-            </div>
-            <div class="text-xs text-slate-400 mt-0.5">
-              <span>Home</span> / <span>postagens</span> / <span class="text-slate-600 font-medium">Criar/Editar</span>
-            </div>
-          </div>
-
-          <div>
-            <button onclick="resetPostForm()" class="px-3.5 py-1.5 rounded border border-cyan-600 text-cyan-700 bg-cyan-50 hover:bg-cyan-100 text-xs font-semibold flex items-center gap-1.5 transition">
-              <span>📝</span> Novo
-            </button>
-          </div>
-        </div>
-
-        <!-- Alerta de Sucesso -->
-        <div id="postSuccessAlert" class="hidden p-4 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center justify-between">
-          <span id="postSuccessText">✓ Postagem salva com sucesso e publicada no portal!</span>
-          <a href="../index.html" target="_blank" class="underline">Visualizar no Portal Público →</a>
-        </div>
-
-        <!-- Formulário Oficial (Campos Exatos do Print) -->
-        <form id="cmsPostForm" class="bg-white rounded-lg border border-slate-200 shadow-sm p-6 space-y-5">
-          <input type="hidden" id="editingPostId" value="">
-
-          <!-- 1. Data da Publicação -->
-          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
-            <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Data da publicação</label>
-            <div class="sm:col-span-4">
-              <input type="text" id="fieldDataPublicacao" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
-            </div>
-          </div>
-
-          <!-- 2. Título + Botão Verificar -->
-          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
-            <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Título *</label>
-            <div class="sm:col-span-9">
-              <input type="text" id="fieldTitulo" required placeholder="Digite a manchete principal da matéria..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
-            </div>
-            <div class="sm:col-span-1">
-              <button type="button" onclick="verifyTitleSEO()" class="w-full py-2 bg-cms-accentCyan hover:bg-cyan-600 text-white font-bold text-xs rounded transition shadow-sm">
-                Verificar
-              </button>
-            </div>
-          </div>
-
-          <!-- 3. Título SEO -->
-          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
-            <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Título SEO</label>
-            <div class="sm:col-span-10">
-              <input type="text" id="fieldTituloSEO" placeholder="Título otimizado para motores de busca (Google)..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
-            </div>
-          </div>
-
-          <!-- 4. Descrição SEO -->
-          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
-            <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Descrição SEO</label>
-            <div class="sm:col-span-10">
-              <input type="text" id="fieldDescricaoSEO" placeholder="Resumo factual da notícia (linha fina)..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
-            </div>
-          </div>
-
-          <!-- 5. Palavras chave -->
-          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
-            <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Palavras chave</label>
-            <div class="sm:col-span-10">
-              <input type="text" id="fieldPalavrasChave" placeholder="carros, motos, etc..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
-            </div>
-          </div>
-
-          <!-- 6. Categoria -->
-          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
-            <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Categoria *</label>
-            <div class="sm:col-span-4">
-              <select id="fieldCategoria" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600 bg-white">
-                <option value="Economia">Economia</option>
-                <option value="Política">Política</option>
-                <option value="Tecnologia">Tecnologia</option>
-                <option value="Esportes">Esportes</option>
-                <option value="Entretenimento">Entretenimento</option>
-                <option value="Geral">Geral</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- 7. Compressão da Imagem -->
-          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
-            <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Compressão da Imagem</label>
-            <div class="sm:col-span-4">
-              <select id="fieldCompressao" class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600 bg-white">
-                <option value="75%">75% (Otimizado Web)</option>
-                <option value="80%">80%</option>
-                <option value="90%">90%</option>
-                <option value="original">Original</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- 8. Imagem Principal -->
-          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
-            <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Imagem</label>
-            <div class="sm:col-span-8">
-              <input type="text" id="fieldImagemUrl" placeholder="https://images.unsplash.com/... ou cole a URL da imagem" class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
-            </div>
-            <div class="sm:col-span-2">
-              <button type="button" onclick="chooseSampleImage()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded transition shadow-sm">
-                Selecionar
-              </button>
-            </div>
-          </div>
-
-          <!-- 9. Legenda da Imagem -->
-          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
-            <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Legenda imagem</label>
-            <div class="sm:col-span-10">
-              <input type="text" id="fieldLegendaImagem" placeholder="Ex: Fachada do Congresso Nacional durante a sessão plenária." class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
-            </div>
-          </div>
-
-          <!-- 10. BARRA DE FERRAMENTAS WYSIWYG & EDITOR DE CONTEÚDO -->
-          <div class="pt-4 border-t border-slate-200">
-            <label class="block text-xs font-semibold text-slate-600 mb-2">Conteúdo da Notícia *</label>
-            
-            <!-- Barra de Ferramentas (Toolbar com estilo idêntico ao do print) -->
-            <div class="bg-slate-100 border border-slate-300 rounded-t p-1.5 flex flex-wrap items-center gap-1 text-xs text-slate-700">
-              <button type="button" onclick="execCmd('undo')" class="p-1.5 hover:bg-slate-200 rounded" title="Desfazer">↩</button>
-              <button type="button" onclick="execCmd('redo')" class="p-1.5 hover:bg-slate-200 rounded" title="Refazer">↪</button>
-              <span class="text-slate-300">|</span>
-              <button type="button" onclick="execCmd('bold')" class="p-1.5 font-bold hover:bg-slate-200 rounded" title="Negrito">B</button>
-              <button type="button" onclick="execCmd('italic')" class="p-1.5 italic hover:bg-slate-200 rounded" title="Itálico">I</button>
-              <button type="button" onclick="execCmd('underline')" class="p-1.5 underline hover:bg-slate-200 rounded" title="Sublinhado">U</button>
-              <span class="text-slate-300">|</span>
-              <select onchange="execCmd('fontName', this.value)" class="text-xs py-1 px-2 border border-slate-300 rounded bg-white">
-                <option value="Roboto">Roboto</option>
-                <option value="Inter">Inter</option>
-                <option value="Merriweather">Merriweather</option>
-                <option value="Arial">Arial</option>
-              </select>
-              <button type="button" onclick="execCmd('foreColor', '#C8102E')" class="p-1.5 font-bold text-red-600 hover:bg-slate-200 rounded" title="Cor Vermelho Editorial">A</button>
-              <span class="text-slate-300">|</span>
-              <button type="button" onclick="execCmd('justifyLeft')" class="p-1.5 hover:bg-slate-200 rounded" title="Alinhar à Esquerda">⬅</button>
-              <button type="button" onclick="execCmd('justifyCenter')" class="p-1.5 hover:bg-slate-200 rounded" title="Centralizar">↔</button>
-              <button type="button" onclick="execCmd('justifyRight')" class="p-1.5 hover:bg-slate-200 rounded" title="Alinhar à Direita">➡</button>
-              <span class="text-slate-300">|</span>
-              <button type="button" onclick="execCmd('insertUnorderedList')" class="p-1.5 hover:bg-slate-200 rounded" title="Lista com Marcadores">• ≡</button>
-              <button type="button" onclick="execCmd('insertOrderedList')" class="p-1.5 hover:bg-slate-200 rounded" title="Lista Numerada">1. ≡</button>
-              <span class="text-slate-300">|</span>
-              <button type="button" onclick="insertLinkPrompt()" class="p-1.5 hover:bg-slate-200 rounded" title="Inserir Link">🔗</button>
-              <button type="button" onclick="insertImagePrompt()" class="p-1.5 hover:bg-slate-200 rounded" title="Inserir Imagem">🖼️</button>
-              <button type="button" onclick="execCmd('formatBlock', '<blockquote>')" class="p-1.5 hover:bg-slate-200 rounded" title="Citação">❝</button>
-              <button type="button" onclick="toggleRawCode()" class="p-1.5 hover:bg-slate-200 rounded font-mono font-bold" title="Código HTML">&lt;/&gt;</button>
-            </div>
-
-            <!-- Área Editável do Conteúdo (WYSIWYG) -->
-            <div 
-              id="editorContent" 
-              contenteditable="true" 
-              placeholder="Digite ou cole aqui o conteúdo completo da matéria. Pressione Enter para novos parágrafos..."
-              class="wysiwyg-content min-h-[300px] max-h-[500px] overflow-y-auto p-4 border border-t-0 border-slate-300 rounded-b text-sm leading-relaxed focus:outline-none focus:border-cyan-600 bg-white"
-            ></div>
-
-            <!-- Textarea Raw (oculto por padrão, acionado por Desabilitar WYSIWYG) -->
-            <textarea 
-              id="rawCodeTextarea" 
-              rows="12" 
-              class="hidden w-full p-4 border border-t-0 border-slate-300 rounded-b text-xs font-mono leading-relaxed focus:outline-none focus:border-cyan-600 bg-slate-900 text-slate-100"
-            ></textarea>
-
-            <!-- Checkbox Desabilitar WYSIWYG (Conforme o print) -->
-            <div class="mt-3 flex items-center justify-between">
-              <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
-                <input type="checkbox" id="chkDisableWysiwyg" onchange="handleToggleWysiwyg(this.checked)" class="rounded text-cyan-600 focus:ring-cyan-500">
-                <span>Desabilitar WYSIWYG (Editar como HTML puro)</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- BOTÕES DE AÇÃO INFERIORES: VOLTAR & SALVAR (Conforme o print) -->
-          <div class="pt-6 border-t border-slate-200 flex items-center justify-end gap-3">
-            <button type="button" onclick="switchView('dashboard')" class="px-6 py-2 bg-cms-btnRed hover:bg-red-600 text-white font-bold text-xs rounded transition shadow-sm">
-              Voltar
-            </button>
-            <button type="submit" id="btnSubmitPost" class="px-8 py-2 bg-cms-btnBlue hover:bg-blue-700 text-white font-bold text-xs rounded transition shadow-md flex items-center gap-2">
-              <span id="btnSubmitSpinner" class="hidden animate-spin">⟳</span>
-              <span>Salvar</span>
-            </button>
-          </div>
-
-        </form>
-
-      </section>
-
-      <!-- ======================================================= -->
-      <!-- TELA 3: LISTAGEM COMPLETA DE NOTÍCIAS                    -->
-      <!-- ======================================================= -->
-      <section id="viewPostsList" class="hidden space-y-6">
-        <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex items-center justify-between">
-          <div>
-            <div class="flex items-center gap-2 text-slate-800 font-bold text-lg">
-              <span class="text-cms-accentCyan">⊕</span>
-              <span>Gerenciamento de Notícias</span>
-            </div>
-            <div class="text-xs text-slate-400 mt-0.5">Home / notícias / listagem</div>
-          </div>
-          <button onclick="switchView('new_post')" class="px-4 py-2 bg-cms-btnBlue text-white font-bold text-xs rounded hover:bg-blue-700 transition">
-            + Nova Matéria
-          </button>
-        </div>
-
-        <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[10px]">
-                <tr>
-                  <th class="py-3 px-4">ID</th>
-                  <th class="py-3 px-4">Título</th>
-                  <th class="py-3 px-4">Categoria</th>
-                  <th class="py-3 px-4">Data</th>
-                  <th class="py-3 px-4">Views</th>
-                  <th class="py-3 px-4 text-right">Ações</th>
-                </tr>
-              </thead>
-              <tbody id="allNewsTableBody" class="divide-y divide-slate-100"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-    </main>
-  </div>
-
-  <!-- ======================================================= -->
-  <!-- MODAL DE CONFIGURAÇÃO DO SUPABASE                       -->
-  <!-- ======================================================= -->
-  <div id="supabaseModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-fadeIn">
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-        <div class="flex items-center gap-2">
-          <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 font-black flex items-center justify-center">⚡</span>
-          <div>
-            <h3 class="font-bold text-sm text-slate-900">Configuração Supabase</h3>
-            <p class="text-xs text-slate-400">Vincule seu projeto Supabase na nuvem</p>
-          </div>
-        </div>
-        <button onclick="closeSupabaseModal()" class="text-slate-400 hover:text-slate-700 text-lg">✕</button>
-      </div>
-
-      <div class="text-xs text-slate-600 space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
-        <p>1. Abra o arquivo <code class="text-cyan-700 font-bold">supabase-setup.sql</code> no seu projeto do Supabase (SQL Editor) e clique em <strong>Run</strong>.</p>
-        <p>2. No Supabase, vá em <strong>Project Settings > API</strong> e copie os valores abaixo:</p>
-      </div>
-
-      <form id="supabaseConfigForm" onsubmit="handleSaveSupabaseConfig(event)" class="space-y-3 text-xs">
+      <!-- Formulário de Login -->
+      <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-4">
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Project URL (URL do Projeto Supabase)</label>
-          <input type="url" id="inputSupabaseUrl" placeholder="https://exemplo.supabase.co" class="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:border-cyan-600 font-mono">
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">E-mail de Acesso</label>
+          <div class="relative">
+            <input 
+              type="email" 
+              id="loginEmail" 
+              required 
+              placeholder="admin@giro360.com" 
+              class="w-full pl-10 pr-4 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
+            >
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">
+              ✉
+            </span>
+          </div>
         </div>
 
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Anon / Public API Key (Chave Pública Anon)</label>
-          <input type="password" id="inputSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="w-full px-3 py-2 border border-slate-300 rounded focus:outline-none focus:border-cyan-600 font-mono">
-        </div>
-
-        <div class="flex items-center justify-between pt-3 border-t border-slate-100">
-          <button type="button" onclick="disconnectSupabase()" class="text-rose-600 hover:underline">
-            Desconectar (Usar LocalStorage)
-          </button>
-          <div class="flex gap-2">
-            <button type="button" onclick="closeSupabaseModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded">
-              Cancelar
-            </button>
-            <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded shadow">
-              Salvar Conexão
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Senha</label>
+          <div class="relative">
+            <input 
+              type="password" 
+              id="loginPassword" 
+              required 
+              placeholder="••••••••••••" 
+              class="w-full pl-10 pr-10 py-2.5 bg-slate-800/80 border border-slate-700 rounded-xl text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition"
+            >
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-sm">
+              🔒
+            </span>
+            <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200 text-xs">
+              👁
             </button>
           </div>
         </div>
+
+        <button 
+          type="submit" 
+          id="btnLoginSubmit" 
+          class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-black rounded-xl text-xs uppercase tracking-wider transition shadow-lg flex items-center justify-center gap-2 mt-2"
+        >
+          <span id="loginSpinner" class="hidden animate-spin">⟳</span>
+          <span id="loginBtnText">Entrar no Painel</span>
+        </button>
       </form>
+
+      <!-- Instruções de Criação de Usuário no Supabase -->
+      <div class="p-3.5 rounded-xl bg-slate-800/60 border border-slate-700/60 text-[11px] text-slate-400 space-y-1.5">
+        <div class="font-bold text-slate-200 flex items-center gap-1.5">
+          <span>💡</span> Como cadastrar seu usuário no Supabase:
+        </div>
+        <ol class="list-decimal pl-4 space-y-1 text-slate-400">
+          <li>No painel do Supabase, clique em <strong>Authentication</strong> > <strong>Users</strong>.</li>
+          <li>Clique em <strong>Add user</strong> > <strong>Create user</strong>.</li>
+          <li>Digite seu e-mail e senha desejados e confirme (Auto-confirm email = marcado).</li>
+          <li>Use esse mesmo e-mail e senha acima para fazer login!</li>
+        </ol>
+      </div>
+
+      <div class="text-center pt-2">
+        <a href="../index.html" class="text-xs text-slate-500 hover:text-slate-300 transition">
+          ← Voltar para o Portal de Notícias
+        </a>
+      </div>
+
     </div>
   </div>
 
-  <!-- SCRIPT PRINCIPAL DO CMS -->
+  <!-- ======================================================= -->
+  <!-- 2. APLICAÇÃO CMS (EXIBIDA APENAS APÓS AUTENTICAÇÃO)     -->
+  <!-- ======================================================= -->
+  <div id="adminApp" class="hidden min-h-screen flex flex-col bg-[#F1F5F9]">
+    
+    <!-- TOPBAR SUPERIOR (Fiel aos prints) -->
+    <header class="bg-cms-topbar text-white h-14 flex items-center justify-between px-4 sticky top-0 z-50 shadow-sm border-b border-slate-700">
+      <div class="flex items-center gap-4">
+        <!-- Logo NASOFTWARE / GIRO 360 -->
+        <div class="flex items-center gap-2 font-black text-sm tracking-widest text-slate-100">
+          <span class="w-6 h-6 rounded bg-cms-accentCyan flex items-center justify-center text-slate-900 font-black text-xs">
+            ◈
+          </span>
+          <span>NASOFTWARE</span>
+          <span class="text-[10px] text-cyan-400 font-bold bg-cyan-950 px-1.5 py-0.5 rounded ml-1">GIRO 360</span>
+        </div>
+
+        <button id="toggleSidebarBtn" class="text-slate-300 hover:text-white p-1.5 rounded transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+      </div>
+
+      <!-- Usuário Admin à Direita -->
+      <div class="flex items-center gap-3">
+        <!-- Indicador Supabase -->
+        <div id="supabaseStatusBadge" class="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">
+          <span id="supabaseStatusDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="supabaseStatusText">Supabase Nuvem Ativa ✓</span>
+        </div>
+
+        <!-- Perfil Logado Dropdown -->
+        <div class="relative">
+          <button id="adminDropdownBtn" class="flex items-center gap-2 text-sm text-slate-200 hover:text-white py-1 px-2 rounded transition">
+            <div class="w-7 h-7 rounded-full bg-cyan-500 text-slate-950 font-bold flex items-center justify-center text-xs shadow">
+              N
+            </div>
+            <span id="topbarUserEmail" class="text-xs font-semibold">Admin ▾</span>
+          </button>
+
+          <div id="adminDropdownMenu" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-lg shadow-xl border border-slate-200 text-slate-700 text-xs py-1.5 z-50">
+            <div class="px-4 py-2 border-b border-slate-100 text-[11px] text-slate-400">
+              Conectado como:<br>
+              <strong id="dropdownUserEmail" class="text-slate-700">admin@giro360.com</strong>
+            </div>
+            <a href="../index.html" target="_blank" class="block px-4 py-2 hover:bg-slate-100">🌐 Ver Portal Público</a>
+            <div class="border-t border-slate-100 my-1"></div>
+            <button onclick="handleLogout()" class="w-full text-left px-4 py-2 hover:bg-rose-50 text-rose-600 font-semibold flex items-center gap-2">
+              <span>🚪</span> Sair da Conta
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- CORPO PRINCIPAL (SIDEBAR + CONTEÚDO) -->
+    <div class="flex flex-1 overflow-hidden">
+      
+      <!-- SIDEBAR LATERAL -->
+      <aside id="sidebar" class="w-64 bg-cms-sidebar text-slate-300 flex flex-col shrink-0 transition-all duration-300 border-r border-slate-800">
+        
+        <!-- Card do Usuário Logado -->
+        <div class="p-4 border-b border-slate-800/80 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-cyan-600/80 text-white font-bold flex items-center justify-center text-sm shadow">
+              N
+            </div>
+            <div class="overflow-hidden">
+              <div id="sidebarUserEmail" class="font-bold text-xs text-white leading-tight truncate max-w-[130px]">Admin</div>
+              <div class="text-[10px] text-slate-400">Administrador Supabase</div>
+            </div>
+          </div>
+          <button onclick="handleLogout()" class="text-slate-400 hover:text-rose-400 text-xs" title="Sair">
+            🚪
+          </button>
+        </div>
+
+        <div class="px-4 pt-4 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          NAVEGAÇÃO
+        </div>
+
+        <!-- Menus da Sidebar -->
+        <nav class="flex-1 px-2 space-y-0.5 text-xs overflow-y-auto">
+          <button onclick="switchView('dashboard')" id="navItemDashboard" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-white bg-slate-800 font-medium transition">
+            <span class="text-sm">🏠</span>
+            <span>Home</span>
+          </button>
+
+          <button onclick="switchView('posts_list')" id="navItemNoticias" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
+            <span class="text-sm">📰</span>
+            <span>Notícias</span>
+          </button>
+
+          <button onclick="switchView('new_post')" id="navItemNovaPostagem" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
+            <span class="text-sm">📝</span>
+            <span>Criar / Editar Post</span>
+          </button>
+
+          <button onclick="alert('Categorias sincronizadas no Supabase: Política, Economia, Tecnologia, Esportes, Entretenimento e Geral.')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
+            <span class="text-sm">🏷️</span>
+            <span>Categorias</span>
+          </button>
+
+          <button onclick="alert('Importação RSS: Leitor de feeds configurado para agências de notícias.')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
+            <span class="text-sm">☁️</span>
+            <span>Importação RSS</span>
+          </button>
+
+          <button onclick="alert('Módulo de Banners e Publicidade de Patrocinadores.')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
+            <span class="text-sm">📢</span>
+            <span>Anúncios</span>
+          </button>
+
+          <button onclick="alert('Galeria de Imagens do Supabase Storage.')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
+            <span class="text-sm">🖼️</span>
+            <span>Imagens</span>
+          </button>
+
+          <button onclick="alert('Redes Sociais: WhatsApp, Instagram e YouTube configurados.')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
+            <span class="text-sm">👥</span>
+            <span>Redes sociais</span>
+          </button>
+
+          <button onclick="alert('Textos institucionais e Mensagens recebidas no formulário de contato.')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
+            <span class="text-sm">📝</span>
+            <span>Textos e contatos</span>
+          </button>
+
+          <button onclick="alert('Assinantes cadastrados na Newsletter matinal.')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-slate-400 hover:text-white hover:bg-slate-800/60 font-medium transition">
+            <span class="text-sm">✉️</span>
+            <span>News Letter</span>
+          </button>
+
+          <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded text-rose-400 hover:text-rose-300 hover:bg-slate-800/60 font-medium transition mt-4">
+            <span class="text-sm">🚪</span>
+            <span>Sair do Painel</span>
+          </button>
+        </nav>
+
+        <div class="p-3 text-[10px] text-slate-500 border-t border-slate-800 text-center">
+          Giro 360 CMS v2.5 • Auth Protected
+        </div>
+      </aside>
+
+      <!-- ÁREA DE CONTEÚDO -->
+      <main class="flex-1 overflow-y-auto bg-slate-100 p-4 sm:p-6">
+        
+        <!-- ========================================== -->
+        <!-- TELA 1: DASHBOARD                          -->
+        <!-- ========================================== -->
+        <section id="viewDashboard" class="space-y-6">
+          <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2 text-slate-800 font-bold text-lg">
+                <span class="text-cms-accentCyan">⊕</span>
+                <span>Home - Dashboard</span>
+              </div>
+              <div class="text-xs text-slate-400 mt-0.5">
+                <span>Home</span> / <span class="text-slate-600 font-medium">Dashboard</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button onclick="switchView('new_post')" class="px-3.5 py-1.5 rounded border border-cyan-600 text-cyan-700 bg-cyan-50 hover:bg-cyan-100 text-xs font-semibold flex items-center gap-1.5 transition">
+                <span>📝</span> Nova postagem
+              </button>
+              <button onclick="alert('Analytics em tempo real do Supabase: Sincronizado.')" class="px-3.5 py-1.5 rounded border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 text-xs font-semibold flex items-center gap-1.5 transition">
+                <span>📊</span> Analytics
+              </button>
+              <button onclick="switchView('posts_list')" class="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-800">
+                Meus dados ▾
+              </button>
+            </div>
+          </div>
+
+          <!-- Métricas KPIs -->
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+              <span class="text-[11px] font-bold text-slate-400 uppercase">Notícias Ativas</span>
+              <div id="dashTotalNews" class="text-2xl font-black text-slate-800 mt-1">0</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+              <span class="text-[11px] font-bold text-slate-400 uppercase">Visualizações Acumuladas</span>
+              <div id="dashTotalViews" class="text-2xl font-black text-emerald-600 mt-1">0</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+              <span class="text-[11px] font-bold text-slate-400 uppercase">Comentários</span>
+              <div id="dashTotalComments" class="text-2xl font-black text-cyan-600 mt-1">0</div>
+            </div>
+            <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+              <span class="text-[11px] font-bold text-slate-400 uppercase">Categorias</span>
+              <div class="text-2xl font-black text-purple-600 mt-1">6</div>
+            </div>
+          </div>
+
+          <!-- Tabela de Notícias -->
+          <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+              <h3 class="font-bold text-sm text-slate-800">Últimas Publicações</h3>
+              <button onclick="switchView('new_post')" class="text-xs text-cyan-600 font-bold hover:underline">+ Criar Nova Postagem</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[10px]">
+                  <tr>
+                    <th class="py-3 px-4">ID</th>
+                    <th class="py-3 px-4">Título da Notícia</th>
+                    <th class="py-3 px-4">Categoria</th>
+                    <th class="py-3 px-4">Data</th>
+                    <th class="py-3 px-4">Views</th>
+                    <th class="py-3 px-4 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="dashNewsTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TELA 2: CRIAÇÃO / EDIÇÃO DE POSTAGEM       -->
+        <!-- ========================================== -->
+        <section id="viewNewPost" class="hidden space-y-6">
+          <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2 text-slate-800 font-bold text-lg">
+                <span class="text-cms-accentCyan">⊕</span>
+                <span id="formPageTitle">Postagens - Edição/Criação</span>
+              </div>
+              <div class="text-xs text-slate-400 mt-0.5">
+                <span>Home</span> / <span>postagens</span> / <span class="text-slate-600 font-medium">Criar/Editar</span>
+              </div>
+            </div>
+
+            <div>
+              <button onclick="resetPostForm()" class="px-3.5 py-1.5 rounded border border-cyan-600 text-cyan-700 bg-cyan-50 hover:bg-cyan-100 text-xs font-semibold flex items-center gap-1.5 transition">
+                <span>📝</span> Novo
+              </button>
+            </div>
+          </div>
+
+          <div id="postSuccessAlert" class="hidden p-4 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center justify-between">
+            <span id="postSuccessText">✓ Postagem salva com sucesso e publicada no portal!</span>
+            <a href="../index.html" target="_blank" class="underline">Visualizar no Portal Público →</a>
+          </div>
+
+          <!-- Formulário Completo -->
+          <form id="cmsPostForm" class="bg-white rounded-lg border border-slate-200 shadow-sm p-6 space-y-5">
+            <input type="hidden" id="editingPostId" value="">
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
+              <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Data da publicação</label>
+              <div class="sm:col-span-4">
+                <input type="text" id="fieldDataPublicacao" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
+              <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Título *</label>
+              <div class="sm:col-span-9">
+                <input type="text" id="fieldTitulo" required placeholder="Digite a manchete principal da matéria..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
+              </div>
+              <div class="sm:col-span-1">
+                <button type="button" onclick="verifyTitleSEO()" class="w-full py-2 bg-cms-accentCyan hover:bg-cyan-600 text-white font-bold text-xs rounded transition shadow-sm">
+                  Verificar
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
+              <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Título SEO</label>
+              <div class="sm:col-span-10">
+                <input type="text" id="fieldTituloSEO" placeholder="Título otimizado para o Google..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
+              <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Descrição SEO</label>
+              <div class="sm:col-span-10">
+                <input type="text" id="fieldDescricaoSEO" placeholder="Resumo factual da notícia (linha fina)..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
+              <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Palavras chave</label>
+              <div class="sm:col-span-10">
+                <input type="text" id="fieldPalavrasChave" placeholder="carros, motos, etc..." class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
+              <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Categoria *</label>
+              <div class="sm:col-span-4">
+                <select id="fieldCategoria" required class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600 bg-white">
+                  <option value="Economia">Economia</option>
+                  <option value="Política">Política</option>
+                  <option value="Tecnologia">Tecnologia</option>
+                  <option value="Esportes">Esportes</option>
+                  <option value="Entretenimento">Entretenimento</option>
+                  <option value="Geral">Geral</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
+              <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Compressão da Imagem</label>
+              <div class="sm:col-span-4">
+                <select id="fieldCompressao" class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600 bg-white">
+                  <option value="75%">75% (Otimizado Web)</option>
+                  <option value="80%">80%</option>
+                  <option value="90%">90%</option>
+                  <option value="original">Original</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
+              <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Imagem</label>
+              <div class="sm:col-span-8">
+                <input type="text" id="fieldImagemUrl" placeholder="https://images.unsplash.com/... ou cole a URL da imagem" class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
+              </div>
+              <div class="sm:col-span-2">
+                <button type="button" onclick="chooseSampleImage()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded transition shadow-sm">
+                  Selecionar
+                </button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
+              <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Legenda imagem</label>
+              <div class="sm:col-span-10">
+                <input type="text" id="fieldLegendaImagem" placeholder="Ex: Fotografia oficial da solenidade em Brasília." class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
+              </div>
+            </div>
+
+            <!-- WYSIWYG Editor -->
+            <div class="pt-4 border-t border-slate-200">
+              <label class="block text-xs font-semibold text-slate-600 mb-2">Conteúdo da Notícia *</label>
+              
+              <div class="bg-slate-100 border border-slate-300 rounded-t p-1.5 flex flex-wrap items-center gap-1 text-xs text-slate-700">
+                <button type="button" onclick="execCmd('undo')" class="p-1.5 hover:bg-slate-200 rounded" title="Desfazer">↩</button>
+                <button type="button" onclick="execCmd('redo')" class="p-1.5 hover:bg-slate-200 rounded" title="Refazer">↪</button>
+                <span class="text-slate-300">|</span>
+                <button type="button" onclick="execCmd('bold')" class="p-1.5 font-bold hover:bg-slate-200 rounded" title="Negrito">B</button>
+                <button type="button" onclick="execCmd('italic')" class="p-1.5 italic hover:bg-slate-200 rounded" title="Itálico">I</button>
+                <button type="button" onclick="execCmd('underline')" class="p-1.5 underline hover:bg-slate-200 rounded" title="Sublinhado">U</button>
+                <span class="text-slate-300">|</span>
+                <select onchange="execCmd('fontName', this.value)" class="text-xs py-1 px-2 border border-slate-300 rounded bg-white">
+                  <option value="Roboto">Roboto</option>
+                  <option value="Inter">Inter</option>
+                  <option value="Merriweather">Merriweather</option>
+                </select>
+                <button type="button" onclick="execCmd('foreColor', '#C8102E')" class="p-1.5 font-bold text-red-600 hover:bg-slate-200 rounded" title="Cor Vermelha">A</button>
+                <span class="text-slate-300">|</span>
+                <button type="button" onclick="execCmd('justifyLeft')" class="p-1.5 hover:bg-slate-200 rounded">⬅</button>
+                <button type="button" onclick="execCmd('justifyCenter')" class="p-1.5 hover:bg-slate-200 rounded">↔</button>
+                <button type="button" onclick="execCmd('justifyRight')" class="p-1.5 hover:bg-slate-200 rounded">➡</button>
+                <span class="text-slate-300">|</span>
+                <button type="button" onclick="execCmd('insertUnorderedList')" class="p-1.5 hover:bg-slate-200 rounded">• ≡</button>
+                <button type="button" onclick="execCmd('insertOrderedList')" class="p-1.5 hover:bg-slate-200 rounded">1. ≡</button>
+                <span class="text-slate-300">|</span>
+                <button type="button" onclick="insertLinkPrompt()" class="p-1.5 hover:bg-slate-200 rounded">🔗</button>
+                <button type="button" onclick="insertImagePrompt()" class="p-1.5 hover:bg-slate-200 rounded">🖼️</button>
+                <button type="button" onclick="execCmd('formatBlock', '<blockquote>')" class="p-1.5 hover:bg-slate-200 rounded">❝</button>
+                <button type="button" onclick="toggleRawCode()" class="p-1.5 hover:bg-slate-200 rounded font-mono font-bold">&lt;/&gt;</button>
+              </div>
+
+              <div 
+                id="editorContent" 
+                contenteditable="true" 
+                placeholder="Digite ou cole aqui o conteúdo completo da matéria. Pressione Enter para novos parágrafos..."
+                class="wysiwyg-content min-h-[300px] max-h-[500px] overflow-y-auto p-4 border border-t-0 border-slate-300 rounded-b text-sm leading-relaxed focus:outline-none focus:border-cyan-600 bg-white"
+              ></div>
+
+              <textarea 
+                id="rawCodeTextarea" 
+                rows="12" 
+                class="hidden w-full p-4 border border-t-0 border-slate-300 rounded-b text-xs font-mono leading-relaxed focus:outline-none focus:border-cyan-600 bg-slate-900 text-slate-100"
+              ></textarea>
+
+              <div class="mt-3 flex items-center justify-between">
+                <label class="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                  <input type="checkbox" id="chkDisableWysiwyg" onchange="handleToggleWysiwyg(this.checked)" class="rounded text-cyan-600 focus:ring-cyan-500">
+                  <span>Desabilitar WYSIWYG (Editar como HTML puro)</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="pt-6 border-t border-slate-200 flex items-center justify-end gap-3">
+              <button type="button" onclick="switchView('dashboard')" class="px-6 py-2 bg-cms-btnRed hover:bg-red-600 text-white font-bold text-xs rounded transition shadow-sm">
+                Voltar
+              </button>
+              <button type="submit" id="btnSubmitPost" class="px-8 py-2 bg-cms-btnBlue hover:bg-blue-700 text-white font-bold text-xs rounded transition shadow-md flex items-center gap-2">
+                <span id="btnSubmitSpinner" class="hidden animate-spin">⟳</span>
+                <span>Salvar</span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- TELA 3: LISTAGEM DE NOTÍCIAS               -->
+        <!-- ========================================== -->
+        <section id="viewPostsList" class="hidden space-y-6">
+          <div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-slate-800 font-bold text-lg">
+                <span class="text-cms-accentCyan">⊕</span>
+                <span>Gerenciamento de Notícias</span>
+              </div>
+              <div class="text-xs text-slate-400 mt-0.5">Home / notícias / listagem</div>
+            </div>
+            <button onclick="switchView('new_post')" class="px-4 py-2 bg-cms-btnBlue text-white font-bold text-xs rounded hover:bg-blue-700 transition">
+              + Nova Matéria
+            </button>
+          </div>
+
+          <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 uppercase text-[10px]">
+                  <tr>
+                    <th class="py-3 px-4">ID</th>
+                    <th class="py-3 px-4">Título</th>
+                    <th class="py-3 px-4">Categoria</th>
+                    <th class="py-3 px-4">Data</th>
+                    <th class="py-3 px-4">Views</th>
+                    <th class="py-3 px-4 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="allNewsTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- SCRIPT PRINCIPAL DO CMS E AUTENTICAÇÃO -->
   <script src="../scripts/data.js"></script>
   <script>
-    /* ========================================================
-     * CMS CONTROLLER: SINCRONIZAÇÃO SUPABASE & LOCALSTORAGE
-     * ======================================================== */
+    const SUPABASE_URL = 'https://wxlzwccoitbzpisitdqe.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_1zm8d88ZJ7DvLKFNZ_jG_g_J5Q8sCKO';
+
     let supabaseClient = null;
-    let isConnectedToSupabase = false;
+    let currentUser = null;
+
+    // Inicialização do Supabase Client
+    if (window.supabase && window.supabase.createClient) {
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
-      initSupabaseConnection();
+      checkUserAuth();
       initDateField();
-      renderDashboard();
       initAdminDropdown();
     });
+
+    // 1. VERIFICAR AUTENTICAÇÃO ATUAL
+    async function checkUserAuth() {
+      if (!supabaseClient) return;
+
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session && session.user) {
+          currentUser = session.user;
+          showAdminApp(currentUser);
+        } else {
+          showAuthScreen();
+        }
+      } catch (err) {
+        console.warn('Erro ao verificar sessão:', err);
+        showAuthScreen();
+      }
+    }
+
+    // 2. PROCESSAR LOGIN COM SUPABASE
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value.trim();
+      const errorAlert = document.getElementById('loginErrorAlert');
+      const spinner = document.getElementById('loginSpinner');
+      const btnText = document.getElementById('loginBtnText');
+
+      errorAlert.classList.add('hidden');
+      spinner.classList.remove('hidden');
+      btnText.textContent = 'Autenticando...';
+
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+        spinner.classList.add('hidden');
+        btnText.textContent = 'Entrar no Painel';
+
+        if (error) {
+          errorAlert.textContent = 'Acesso recusado: ' + (error.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos no Supabase.' : error.message);
+          errorAlert.classList.remove('hidden');
+        } else if (data && data.user) {
+          currentUser = data.user;
+          showAdminApp(currentUser);
+        }
+      } catch (err) {
+        spinner.classList.add('hidden');
+        btnText.textContent = 'Entrar no Painel';
+        errorAlert.textContent = 'Erro de conexão com o Supabase. Tente novamente.';
+        errorAlert.classList.remove('hidden');
+      }
+    }
+
+    // 3. LOGOUT (SAIR)
+    async function handleLogout() {
+      if (supabaseClient) {
+        await supabaseClient.auth.signOut();
+      }
+      currentUser = null;
+      showAuthScreen();
+    }
+
+    // Alternar visibilidade das telas
+    function showAdminApp(user) {
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('adminApp').classList.remove('hidden');
+
+      const userEmail = user.email || 'Admin';
+      document.getElementById('topbarUserEmail').textContent = `${userEmail.split('@')[0]} ▾`;
+      document.getElementById('dropdownUserEmail').textContent = userEmail;
+      document.getElementById('sidebarUserEmail').textContent = userEmail;
+
+      renderDashboard();
+    }
+
+    function showAuthScreen() {
+      document.getElementById('adminApp').classList.add('hidden');
+      document.getElementById('authScreen').classList.remove('hidden');
+      document.getElementById('loginPassword').value = '';
+    }
+
+    function togglePasswordVisibility() {
+      const pass = document.getElementById('loginPassword');
+      pass.type = pass.type === 'password' ? 'text' : 'password';
+    }
 
     // Inicialização da Data Atual no Campo
     function initDateField() {
@@ -604,75 +700,6 @@
       if (field) {
         const now = new Date();
         field.value = now.toLocaleDateString('pt-BR');
-      }
-    }
-
-    // Inicialização do Supabase Client
-    async function initSupabaseConnection() {
-      const defaultUrl = 'https://wxlzwccoitbzpisitdqe.supabase.co';
-      const defaultKey = 'sb_publishable_1zm8d88ZJ7DvLKFNZ_jG_g_J5Q8sCKO';
-
-      const url = localStorage.getItem('dn_supabase_url') || defaultUrl;
-      const key = localStorage.getItem('dn_supabase_key') || defaultKey;
-
-      localStorage.setItem('dn_supabase_url', url);
-      localStorage.setItem('dn_supabase_key', key);
-
-      const dot = document.getElementById('supabaseStatusDot');
-      const text = document.getElementById('supabaseStatusText');
-      const noticeBox = document.getElementById('supabaseNoticeBox');
-
-      if (url && key && window.supabase) {
-        try {
-          supabaseClient = window.supabase.createClient(url, key);
-          
-          // Testar se a tabela noticias já foi criada no Supabase
-          const { data, error } = await supabaseClient.from('noticias').select('id').limit(1);
-
-          if (error && error.code === 'PGRST205') {
-            // Tabela ainda não foi criada via SQL Editor
-            isConnectedToSupabase = true;
-            dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
-            text.textContent = 'Supabase Conectado (Execute o SQL)';
-            if (noticeBox) {
-              noticeBox.classList.remove('hidden');
-              noticeBox.innerHTML = `
-                <div class="flex items-center gap-3">
-                  <div class="w-10 h-10 rounded-lg bg-amber-500/20 text-amber-400 font-black flex items-center justify-center text-xl shrink-0">
-                    ⚠️
-                  </div>
-                  <div>
-                    <h4 class="font-bold text-sm text-slate-100">Chaves do Supabase Conectadas com Sucesso!</h4>
-                    <p class="text-xs text-slate-400">Falta apenas 1 passo: execute o arquivo <code class="text-cyan-300 font-mono font-bold">supabase-setup.sql</code> no seu <strong>SQL Editor</strong> do Supabase para criar as tabelas.</p>
-                  </div>
-                </div>
-                <a href="../supabase-setup.sql" download class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg text-xs transition shrink-0 shadow">
-                  Baixar supabase-setup.sql
-                </a>
-              `;
-            }
-          } else if (!error) {
-            // Tabela existe e está 100% pronta!
-            isConnectedToSupabase = true;
-            dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
-            text.textContent = 'Supabase Nuvem Ativa ✓';
-            if (noticeBox) noticeBox.classList.add('hidden');
-          } else {
-            fallbackToLocal();
-          }
-        } catch (e) {
-          console.error('Erro ao conectar com Supabase:', e);
-          fallbackToLocal();
-        }
-      } else {
-        fallbackToLocal();
-      }
-
-      function fallbackToLocal() {
-        isConnectedToSupabase = false;
-        supabaseClient = null;
-        dot.className = 'w-2 h-2 rounded-full bg-amber-400';
-        text.textContent = 'Modo Local (LocalStorage)';
       }
     }
 
@@ -700,11 +727,11 @@
       }
     }
 
-    // Renderizar Métricas e Tabela do Dashboard
+    // Renderizar Dashboard com dados do Supabase
     async function renderDashboard() {
       let news = [];
 
-      if (isConnectedToSupabase && supabaseClient) {
+      if (supabaseClient) {
         try {
           const { data, error } = await supabaseClient
             .from('noticias')
@@ -745,10 +772,10 @@
       `).join('');
     }
 
-    // Renderizar Tabela Completa de Notícias
+    // Renderizar Tabela Completa
     async function renderAllPostsTable() {
       let news = getAllNews();
-      if (isConnectedToSupabase && supabaseClient) {
+      if (supabaseClient) {
         try {
           const { data } = await supabaseClient.from('noticias').select('*').order('id', { ascending: false });
           if (data) news = data;
@@ -772,7 +799,7 @@
       `).join('');
     }
 
-    // Submissão do Formulário de Notícia (Salvar)
+    // Salvar Notícia no Supabase
     document.getElementById('cmsPostForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       
@@ -789,55 +816,49 @@
       const imagemUrl = document.getElementById('fieldImagemUrl').value.trim() || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80';
       const legendaImagem = document.getElementById('fieldLegendaImagem').value.trim();
       
-      // Obter conteúdo formatado
       const isRaw = document.getElementById('chkDisableWysiwyg').checked;
       const conteudo = isRaw 
         ? document.getElementById('rawCodeTextarea').value 
         : document.getElementById('editorContent').innerHTML;
 
-      const postData = {
+      const postPayload = {
         titulo: titulo,
-        title: titulo,
         titulo_seo: tituloSEO,
         descricao_seo: descricaoSEO,
-        subtitle: descricaoSEO,
         palavras_chave: palavrasChave,
         categoria: categoria,
-        category: categoria.toLowerCase(),
-        categoryLabel: categoria,
-        autor: 'Redação Giro 360',
-        author: 'Redação Giro 360',
+        categoria_slug: categoria.toLowerCase(),
+        autor: currentUser ? currentUser.email.split('@')[0] : 'Redação Giro 360',
         tempo_leitura: '3 min',
-        readTime: '3 min',
         imagem_url: imagemUrl,
-        image: imagemUrl,
         legenda_imagem: legendaImagem,
-        caption: legendaImagem,
         conteudo: conteudo,
-        content: conteudo,
-        data_publicacao: dataPublicacao,
-        date: dataPublicacao,
-        visualizacoes: 0,
-        views: 0
+        data_publicacao: dataPublicacao
       };
 
       try {
-        if (isConnectedToSupabase && supabaseClient) {
-          // Gravação no Supabase
+        if (supabaseClient) {
           if (editingId) {
-            await supabaseClient.from('noticias').update(postData).eq('id', editingId);
+            await supabaseClient.from('noticias').update(postPayload).eq('id', editingId);
           } else {
-            await supabaseClient.from('noticias').insert([postData]);
+            await supabaseClient.from('noticias').insert([postPayload]);
           }
         }
 
-        // Grava simultaneamente no LocalStorage para garantir sincronização local instantânea
-        if (editingId) {
-          postData.id = parseInt(editingId, 10);
-        }
-        saveNewsArticle(postData);
+        // Salvar também no localStorage local
+        saveNewsArticle({
+          ...postPayload,
+          id: editingId ? parseInt(editingId, 10) : undefined,
+          title: titulo,
+          subtitle: descricaoSEO,
+          category: categoria.toLowerCase(),
+          categoryLabel: categoria,
+          image: imagemUrl,
+          caption: legendaImagem,
+          content: conteudo,
+          date: dataPublicacao
+        });
 
-        // Feedback
         spinner.classList.add('hidden');
         const alertBox = document.getElementById('postSuccessAlert');
         alertBox.classList.remove('hidden');
@@ -847,19 +868,22 @@
           alertBox.classList.add('hidden');
           resetPostForm();
           switchView('dashboard');
-        }, 2000);
+        }, 1500);
 
       } catch (err) {
         spinner.classList.add('hidden');
-        alert('Erro ao salvar no Supabase. Os dados foram salvos localmente.');
-        saveNewsArticle(postData);
-        switchView('dashboard');
+        alert('Erro ao salvar no banco. Verifique sua conexão.');
       }
     });
 
     // Edição de Post Existente
-    function editPost(id) {
-      const article = getNewsById(id);
+    async function editPost(id) {
+      let article = null;
+      if (supabaseClient) {
+        const { data } = await supabaseClient.from('noticias').select('*').eq('id', id).single();
+        if (data) article = data;
+      }
+      if (!article) article = getNewsById(id);
       if (!article) return;
 
       document.getElementById('editingPostId').value = article.id;
@@ -885,7 +909,7 @@
     async function deletePost(id) {
       if (!confirm(`Deseja realmente excluir a postagem #${id}?`)) return;
 
-      if (isConnectedToSupabase && supabaseClient) {
+      if (supabaseClient) {
         try {
           await supabaseClient.from('noticias').delete().eq('id', id);
         } catch (e) {
@@ -900,7 +924,6 @@
       }
     }
 
-    // Reset do Formulário
     function resetPostForm() {
       document.getElementById('cmsPostForm').reset();
       document.getElementById('editingPostId').value = '';
@@ -910,7 +933,7 @@
       initDateField();
     }
 
-    // Comandos do Editor WYSIWYG
+    // Editor WYSIWYG
     function execCmd(command, value = null) {
       document.execCommand(command, false, value);
       document.getElementById('editorContent').focus();
@@ -952,8 +975,7 @@
         'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80',
         'https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?auto=format&fit=crop&w=1200&q=80',
         'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80',
-        'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80',
-        'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80'
+        'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80'
       ];
       const random = samples[Math.floor(Math.random() * samples.length)];
       document.getElementById('fieldImagemUrl').value = random;
@@ -975,42 +997,6 @@
       }
     }
 
-    // Modal de Configuração do Supabase
-    function openSupabaseModal() {
-      document.getElementById('inputSupabaseUrl').value = localStorage.getItem('dn_supabase_url') || '';
-      document.getElementById('inputSupabaseKey').value = localStorage.getItem('dn_supabase_key') || '';
-      document.getElementById('supabaseModal').classList.remove('hidden');
-    }
-
-    function closeSupabaseModal() {
-      document.getElementById('supabaseModal').classList.add('hidden');
-    }
-
-    function handleSaveSupabaseConfig(e) {
-      e.preventDefault();
-      const url = document.getElementById('inputSupabaseUrl').value.trim();
-      const key = document.getElementById('inputSupabaseKey').value.trim();
-
-      if (url && key) {
-        localStorage.setItem('dn_supabase_url', url);
-        localStorage.setItem('dn_supabase_key', key);
-        initSupabaseConnection();
-        closeSupabaseModal();
-        alert('Conexão configurada com sucesso!');
-        renderDashboard();
-      }
-    }
-
-    function disconnectSupabase() {
-      localStorage.removeItem('dn_supabase_url');
-      localStorage.removeItem('dn_supabase_key');
-      initSupabaseConnection();
-      closeSupabaseModal();
-      alert('Supabase desconectado. O painel operará no modo LocalStorage.');
-      renderDashboard();
-    }
-
-    // Dropdown Admin no Topbar
     function initAdminDropdown() {
       const btn = document.getElementById('adminDropdownBtn');
       const menu = document.getElementById('adminDropdownMenu');
@@ -1022,7 +1008,6 @@
         document.addEventListener('click', () => menu.classList.add('hidden'));
       }
 
-      // Toggle Sidebar
       const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
       const sidebar = document.getElementById('sidebar');
       if (toggleSidebarBtn && sidebar) {
@@ -1047,4 +1032,3 @@
   </script>
 </body>
 </html>
-

@@ -27,3 +27,4 @@ if (typeof window !== 'undefined' && window.supabase && window.supabase.createCl
     console.warn('Não foi possível inicializar o cliente Supabase:', err);
   }
 }
+
