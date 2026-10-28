@@ -212,10 +212,36 @@ function getNewsById(id) {
   return all.find(item => item.id == id);
 }
 
+function formatToISODate(dateStr) {
+  if (!dateStr) return new Date().toISOString().split('T')[0];
+  dateStr = dateStr.toString().trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+    const parts = dateStr.split('/');
+    const day = parts[0].padStart(2, '0');
+    const month = parts[1].padStart(2, '0');
+    const year = parts[2];
+    return `${year}-${month}-${day}`;
+  }
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+  return new Date().toISOString().split('T')[0];
+}
+
+function formatToBRDate(dateStr) {
+  if (!dateStr) return '';
+  if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+    const [y, m, d] = dateStr.split('T')[0].split('-');
+    return `${d}/${m}/${y}`;
+  }
+  return dateStr;
+}
+
 // SALVAR NOTÍCIA (Supabase + LocalStorage)
 async function saveNewsArticle(articleData) {
   const all = getAllNews();
   const sb = getSupabaseClient();
+  const isoDate = formatToISODate(articleData.data_publicacao || articleData.date);
 
   // 1. Tentar salvar no Supabase
   if (sb) {
@@ -232,7 +258,7 @@ async function saveNewsArticle(articleData) {
         imagem_url: articleData.imagem_url || articleData.image,
         legenda_imagem: articleData.legenda_imagem || articleData.caption || '',
         conteudo: articleData.conteudo || articleData.content,
-        data_publicacao: articleData.data_publicacao || articleData.date || new Date().toISOString().split('T')[0]
+        data_publicacao: isoDate
       };
 
       if (articleData.id) {

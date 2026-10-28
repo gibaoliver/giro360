@@ -635,7 +635,90 @@
       checkUserAuth();
       initDateField();
       initAdminDropdown();
+      initDraftAutoSave();
     });
+
+    // Auto-salvamento de rascunho para nunca perder o texto digitado
+    function initDraftAutoSave() {
+      const titleInput = document.getElementById('fieldTitulo');
+      const editor = document.getElementById('editorContent');
+      const rawTextarea = document.getElementById('rawCodeTextarea');
+
+      function saveDraft() {
+        // Não salva rascunho se estiver editando uma postagem existente
+        if (document.getElementById('editingPostId').value) return;
+
+        const draft = {
+          titulo: titleInput.value,
+          tituloSEO: document.getElementById('fieldTituloSEO').value,
+          descricaoSEO: document.getElementById('fieldDescricaoSEO').value,
+          palavrasChave: document.getElementById('fieldPalavrasChave').value,
+          categoria: document.getElementById('fieldCategoria').value,
+          imagemUrl: document.getElementById('fieldImagemUrl').value,
+          legendaImagem: document.getElementById('fieldLegendaImagem').value,
+          conteudo: document.getElementById('chkDisableWysiwyg').checked ? rawTextarea.value : editor.innerHTML
+        };
+        if (draft.titulo.trim() || (draft.conteudo && draft.conteudo.trim().length > 10)) {
+          localStorage.setItem('dn_admin_draft', JSON.stringify(draft));
+        }
+      }
+
+      titleInput.addEventListener('input', saveDraft);
+      editor.addEventListener('input', saveDraft);
+      rawTextarea.addEventListener('input', saveDraft);
+
+      // Verificar se há rascunho salvo ao carregar
+      const savedDraft = localStorage.getItem('dn_admin_draft');
+      if (savedDraft) {
+        try {
+          const d = JSON.parse(savedDraft);
+          if (d.titulo || d.conteudo) {
+            const draftBanner = document.createElement('div');
+            draftBanner.id = 'draftRestoreBanner';
+            draftBanner.className = 'mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-xs flex items-center justify-between';
+            draftBanner.innerHTML = `
+              <span>Encontramos um rascunho não publicado: <strong>"${escapeHtml(d.titulo || 'Sem título')}"</strong></span>
+              <div class="flex gap-2">
+                <button type="button" onclick="restoreDraft()" class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded">Restaurar</button>
+                <button type="button" onclick="discardDraft()" class="px-2 py-1 bg-white hover:bg-amber-100 text-amber-800 font-semibold rounded border border-amber-300">Descartar</button>
+              </div>
+            `;
+            const form = document.getElementById('cmsPostForm');
+            if (form) form.parentNode.insertBefore(draftBanner, form);
+          }
+        } catch (e) {}
+      }
+    }
+
+    function restoreDraft() {
+      const saved = localStorage.getItem('dn_admin_draft');
+      if (!saved) return;
+      try {
+        const d = JSON.parse(saved);
+        if (d.titulo) document.getElementById('fieldTitulo').value = d.titulo;
+        if (d.tituloSEO) document.getElementById('fieldTituloSEO').value = d.tituloSEO;
+        if (d.descricaoSEO) document.getElementById('fieldDescricaoSEO').value = d.descricaoSEO;
+        if (d.palavrasChave) document.getElementById('fieldPalavrasChave').value = d.palavrasChave;
+        if (d.categoria) document.getElementById('fieldCategoria').value = d.categoria;
+        if (d.imagemUrl) {
+          document.getElementById('fieldImagemUrl').value = d.imagemUrl;
+          updateImagePreview(d.imagemUrl);
+        }
+        if (d.legendaImagem) document.getElementById('fieldLegendaImagem').value = d.legendaImagem;
+        if (d.conteudo) {
+          document.getElementById('editorContent').innerHTML = d.conteudo;
+          document.getElementById('rawCodeTextarea').value = d.conteudo;
+        }
+        discardDraft();
+        alert('Rascunho restaurado no formulário!');
+      } catch (e) {}
+    }
+
+    function discardDraft() {
+      localStorage.removeItem('dn_admin_draft');
+      const b = document.getElementById('draftRestoreBanner');
+      if (b) b.remove();
+    }
 
     // 1. VERIFICAR AUTENTICAÇÃO ATUAL
     async function checkUserAuth() {
@@ -759,6 +842,32 @@
       }
     }
 
+    // Funções de Formatação de Data para o Supabase
+    function formatToISODate(dateStr) {
+      if (!dateStr) return new Date().toISOString().split('T')[0];
+      dateStr = dateStr.toString().trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+        const parts = dateStr.split('/');
+        const day = parts[0].padStart(2, '0');
+        const month = parts[1].padStart(2, '0');
+        const year = parts[2];
+        return `${year}-${month}-${day}`;
+      }
+      const d = new Date(dateStr);
+      if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+      return new Date().toISOString().split('T')[0];
+    }
+
+    function formatToBRDate(dateStr) {
+      if (!dateStr) return '';
+      if (/^\d{4}-\d{2}-\d{2}/.test(dateStr)) {
+        const [y, m, d] = dateStr.split('T')[0].split('-');
+        return `${d}/${m}/${y}`;
+      }
+      return dateStr;
+    }
+
     // Renderizar Dashboard com dados do Supabase
     async function renderDashboard() {
       let news = [];
@@ -769,8 +878,11 @@
             .from('noticias')
             .select('*')
             .order('id', { ascending: false });
-          if (!error && data) news = data;
-          else news = getAllNews();
+          if (!error && data) {
+            news = data;
+          } else {
+            news = getAllNews();
+          }
         } catch (err) {
           news = getAllNews();
         }
@@ -786,14 +898,25 @@
       document.getElementById('dashTotalComments').textContent = totalComments;
 
       const tbody = document.getElementById('dashNewsTableBody');
-      const latest = news.slice(0, 5);
+      const latest = news.slice(0, 10);
+
+      if (latest.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" class="py-6 text-center text-slate-400 text-xs">
+              Nenhuma notícia cadastrada ainda. Clique em <strong>+ Criar Nova Postagem</strong> para publicar.
+            </td>
+          </tr>
+        `;
+        return;
+      }
 
       tbody.innerHTML = latest.map(item => `
         <tr class="hover:bg-slate-50 transition">
           <td class="py-3 px-4 font-mono text-slate-400">#${item.id}</td>
           <td class="py-3 px-4 font-bold text-slate-800 line-clamp-1">${escapeHtml(item.titulo || item.title)}</td>
-          <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">${item.categoria || item.categoryLabel}</span></td>
-          <td class="py-3 px-4 text-slate-500">${item.data_publicacao || item.date}</td>
+          <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">${item.categoria || item.categoryLabel || 'Geral'}</span></td>
+          <td class="py-3 px-4 text-slate-500">${formatToBRDate(item.data_publicacao || item.date)}</td>
           <td class="py-3 px-4 font-mono text-emerald-600 font-bold">${(item.visualizacoes || item.views || 0).toLocaleString('pt-BR')}</td>
           <td class="py-3 px-4 text-right space-x-1">
             <button onclick="editPost(${item.id})" class="px-2 py-1 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 rounded font-semibold text-[11px]">Editar</button>
@@ -806,21 +929,31 @@
 
     // Renderizar Tabela Completa
     async function renderAllPostsTable() {
-      let news = getAllNews();
+      let news = [];
       if (supabaseClient) {
         try {
-          const { data } = await supabaseClient.from('noticias').select('*').order('id', { ascending: false });
-          if (data) news = data;
-        } catch (e) {}
+          const { data, error } = await supabaseClient.from('noticias').select('*').order('id', { ascending: false });
+          if (!error && data) news = data;
+          else news = getAllNews();
+        } catch (e) {
+          news = getAllNews();
+        }
+      } else {
+        news = getAllNews();
       }
 
       const tbody = document.getElementById('allNewsTableBody');
+      if (news.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400 text-xs">Nenhuma matéria encontrada.</td></tr>`;
+        return;
+      }
+
       tbody.innerHTML = news.map(item => `
         <tr class="hover:bg-slate-50 transition">
           <td class="py-3 px-4 font-mono text-slate-400">#${item.id}</td>
           <td class="py-3 px-4 font-bold text-slate-800">${escapeHtml(item.titulo || item.title)}</td>
-          <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">${item.categoria || item.categoryLabel}</span></td>
-          <td class="py-3 px-4 text-slate-500">${item.data_publicacao || item.date}</td>
+          <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">${item.categoria || item.categoryLabel || 'Geral'}</span></td>
+          <td class="py-3 px-4 text-slate-500">${formatToBRDate(item.data_publicacao || item.date)}</td>
           <td class="py-3 px-4 font-mono text-slate-600">${(item.visualizacoes || item.views || 0).toLocaleString('pt-BR')}</td>
           <td class="py-3 px-4 text-right space-x-1">
             <button onclick="editPost(${item.id})" class="px-2 py-1 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 rounded font-semibold text-[11px]">Editar</button>
@@ -853,6 +986,9 @@
         ? document.getElementById('rawCodeTextarea').value 
         : document.getElementById('editorContent').innerHTML;
 
+      // Conversão segura de data para o padrão DATE do PostgreSQL (YYYY-MM-DD)
+      const isoDate = formatToISODate(dataPublicacao);
+
       const postPayload = {
         titulo: titulo,
         titulo_seo: tituloSEO,
@@ -865,22 +1001,35 @@
         imagem_url: imagemUrl,
         legenda_imagem: legendaImagem,
         conteudo: conteudo,
-        data_publicacao: dataPublicacao
+        data_publicacao: isoDate
       };
 
       try {
+        let insertedId = editingId;
+
         if (supabaseClient) {
+          let response;
           if (editingId) {
-            await supabaseClient.from('noticias').update(postPayload).eq('id', editingId);
+            response = await supabaseClient.from('noticias').update(postPayload).eq('id', editingId);
           } else {
-            await supabaseClient.from('noticias').insert([postPayload]);
+            response = await supabaseClient.from('noticias').insert([postPayload]).select();
+            if (response.data && response.data[0]) {
+              insertedId = response.data[0].id;
+            }
+          }
+
+          if (response && response.error) {
+            console.error('Erro retornado pelo Supabase:', response.error);
+            spinner.classList.add('hidden');
+            alert('Erro ao salvar no banco de dados do Supabase:\n' + response.error.message + '\n\nSeus dados continuam no formulário.');
+            return; // NÃO limpa o formulário em caso de erro!
           }
         }
 
-        // Salvar também no localStorage local
+        // Salvar também no cache local
         saveNewsArticle({
           ...postPayload,
-          id: editingId ? parseInt(editingId, 10) : undefined,
+          id: insertedId ? parseInt(insertedId, 10) : undefined,
           title: titulo,
           subtitle: descricaoSEO,
           category: categoria.toLowerCase(),
@@ -891,18 +1040,27 @@
           date: dataPublicacao
         });
 
+        // Limpar rascunho temporário
+        localStorage.removeItem('dn_admin_draft');
+
         spinner.classList.add('hidden');
         const alertBox = document.getElementById('postSuccessAlert');
         alertBox.classList.remove('hidden');
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        setTimeout(() => {
+        setTimeout(async () => {
           alertBox.classList.add('hidden');
           resetPostForm();
+          await renderDashboard();
           switchView('dashboard');
-        }, 1500);
+        }, 1200);
 
       } catch (err) {
+        spinner.classList.add('hidden');
+        console.error('Exceção ao salvar:', err);
+        alert('Erro ao processar a postagem. Seus dados continuam salvos no formulário.');
+      }
+    });
         spinner.classList.add('hidden');
         alert('Erro ao salvar no banco. Verifique sua conexão.');
       }

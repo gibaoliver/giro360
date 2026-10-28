@@ -41,3 +41,4 @@ USING (bucket_id = 'imagens-noticias');
 CREATE POLICY "Exclusao de imagens liberada" 
 ON storage.objects FOR DELETE 
 USING (bucket_id = 'imagens-noticias');
+
