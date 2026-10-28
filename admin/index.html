@@ -461,15 +461,47 @@
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-center">
-              <label class="sm:col-span-2 text-xs font-semibold text-slate-600">Imagem</label>
-              <div class="sm:col-span-8">
-                <input type="text" id="fieldImagemUrl" placeholder="https://images.unsplash.com/... ou cole a URL da imagem" class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
-              </div>
-              <div class="sm:col-span-2">
-                <button type="button" onclick="chooseSampleImage()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded transition shadow-sm">
-                  Selecionar
-                </button>
+            <!-- 8. Anexo de Imagem (Upload do Computador ou URL) -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:items-start">
+              <label class="sm:col-span-2 text-xs font-semibold text-slate-600 pt-2">Imagem Principal *</label>
+              <div class="sm:col-span-10 space-y-2">
+                
+                <!-- Input de arquivo oculto acionado pelo botão -->
+                <input type="file" id="fieldImageFileInput" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" onchange="handleImageFileSelected(event)">
+
+                <div class="flex flex-col sm:flex-row gap-2">
+                  <div class="flex-1">
+                    <input type="text" id="fieldImagemUrl" oninput="updateImagePreview(this.value)" placeholder="https://... ou anexe um arquivo do seu computador ao lado" class="w-full px-3 py-2 text-xs border border-slate-300 rounded focus:outline-none focus:border-cyan-600">
+                  </div>
+                  <div class="flex gap-2">
+                    <button type="button" onclick="document.getElementById('fieldImageFileInput').click()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded transition shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+                      <span>📁</span>
+                      <span>Anexar do Computador</span>
+                    </button>
+                    <button type="button" onclick="chooseSampleImage()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded transition border border-slate-300 whitespace-nowrap" title="Usar imagem de demonstração">
+                      Exemplo
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Status do Upload -->
+                <div id="imageUploadStatus" class="hidden text-xs py-1 px-2.5 rounded bg-blue-50 text-blue-700 font-semibold flex items-center gap-2">
+                  <span class="animate-spin text-sm">⟳</span>
+                  <span id="imageUploadStatusText">Otimizando e enviando imagem para o Supabase Storage...</span>
+                </div>
+
+                <!-- Preview Visual da Imagem Anexada -->
+                <div id="imagePreviewContainer" class="hidden items-center gap-3 p-2.5 rounded-lg border border-slate-200 bg-slate-50 w-full max-w-md">
+                  <img id="imagePreviewThumb" src="" alt="Preview" class="w-16 h-12 rounded object-cover border border-slate-300 shrink-0">
+                  <div class="overflow-hidden flex-1 text-xs">
+                    <div id="imagePreviewName" class="font-bold text-slate-700 truncate">imagem.jpg</div>
+                    <div id="imagePreviewSize" class="text-[10px] text-slate-400">Pronta para publicação</div>
+                  </div>
+                  <button type="button" onclick="removeAttachedImage()" class="text-rose-600 hover:text-rose-700 font-bold text-xs p-1" title="Remover anexo">
+                    ✕ Remover
+                  </button>
+                </div>
+
               </div>
             </div>
 
@@ -894,7 +926,9 @@
       document.getElementById('fieldDescricaoSEO').value = article.descricao_seo || article.subtitle || '';
       document.getElementById('fieldPalavrasChave').value = article.palavras_chave || '';
       document.getElementById('fieldCategoria').value = article.categoria || article.categoryLabel || 'Economia';
-      document.getElementById('fieldImagemUrl').value = article.imagem_url || article.image;
+      const imgUrl = article.imagem_url || article.image || '';
+      document.getElementById('fieldImagemUrl').value = imgUrl;
+      updateImagePreview(imgUrl, 'Imagem da Notícia #' + article.id, 'Carregada');
       document.getElementById('fieldLegendaImagem').value = article.legenda_imagem || article.caption || '';
       
       const editor = document.getElementById('editorContent');
@@ -930,6 +964,7 @@
       document.getElementById('formPageTitle').textContent = 'Postagens - Edição/Criação';
       document.getElementById('editorContent').innerHTML = '';
       document.getElementById('rawCodeTextarea').value = '';
+      removeAttachedImage();
       initDateField();
     }
 
@@ -970,6 +1005,143 @@
       handleToggleWysiwyg(chk.checked);
     }
 
+    // ==========================================
+    // UPLOAD E OTIMIZAÇÃO DE IMAGEM (SUPABASE)
+    // ==========================================
+    async function handleImageFileSelected(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const statusBox = document.getElementById('imageUploadStatus');
+      const statusText = document.getElementById('imageUploadStatusText');
+      statusBox.classList.remove('hidden');
+      statusText.textContent = 'Processando e otimizando imagem...';
+
+      // Configuração de Compressão
+      const compressOption = document.getElementById('fieldCompressao').value;
+      let quality = 0.8;
+      if (compressOption === '75%') quality = 0.75;
+      if (compressOption === '90%') quality = 0.9;
+      if (compressOption === 'original') quality = 1.0;
+
+      try {
+        const compressedBlob = await compressImageClientSide(file, quality);
+        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '')}`;
+
+        statusText.textContent = 'Enviando para o Supabase Storage (bucket imagens-noticias)...';
+
+        let uploadedUrl = null;
+
+        if (supabaseClient) {
+          const { data, error } = await supabaseClient
+            .storage
+            .from('imagens-noticias')
+            .upload(fileName, compressedBlob, {
+              cacheControl: '3600',
+              upsert: true,
+              contentType: file.type || 'image/jpeg'
+            });
+
+          if (!error && data) {
+            const { data: publicUrlData } = supabaseClient
+              .storage
+              .from('imagens-noticias')
+              .getPublicUrl(fileName);
+            uploadedUrl = publicUrlData.publicUrl;
+          } else {
+            console.warn('Bucket imagens-noticias não encontrado no Supabase Storage. Usando fallback.', error);
+          }
+        }
+
+        // Se o bucket ainda não foi criado no Supabase, usa Base64 para não falhar
+        if (!uploadedUrl) {
+          uploadedUrl = await blobToDataUrl(compressedBlob);
+          alert('Imagem anexada com sucesso! Para que o upload vá direto para o Supabase Storage, execute o script "supabase-storage.sql" no SQL Editor do seu Supabase.');
+        }
+
+        // Atualizar campo e visualização
+        document.getElementById('fieldImagemUrl').value = uploadedUrl;
+        updateImagePreview(uploadedUrl, file.name, (compressedBlob.size / 1024).toFixed(1) + ' KB');
+        statusBox.classList.add('hidden');
+
+      } catch (err) {
+        console.error('Erro ao processar imagem:', err);
+        statusBox.classList.add('hidden');
+        alert('Erro ao processar a imagem anexada.');
+      }
+    }
+
+    function compressImageClientSide(file, quality) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target.result;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const maxDimension = 1600;
+
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              } else {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob((blob) => {
+              resolve(blob || file);
+            }, file.type || 'image/jpeg', quality);
+          };
+          img.onerror = () => resolve(file);
+        };
+        reader.onerror = (err) => reject(err);
+      });
+    }
+
+    function blobToDataUrl(blob) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    function updateImagePreview(url, name = 'Imagem Anexada', sizeText = 'Pronta para publicação') {
+      const container = document.getElementById('imagePreviewContainer');
+      const thumb = document.getElementById('imagePreviewThumb');
+      const nameEl = document.getElementById('imagePreviewName');
+      const sizeEl = document.getElementById('imagePreviewSize');
+
+      if (url && url.trim().length > 0) {
+        thumb.src = url;
+        nameEl.textContent = name;
+        sizeEl.textContent = sizeText;
+        container.classList.remove('hidden');
+        container.classList.add('flex');
+      } else {
+        container.classList.add('hidden');
+        container.classList.remove('flex');
+      }
+    }
+
+    function removeAttachedImage() {
+      document.getElementById('fieldImagemUrl').value = '';
+      const input = document.getElementById('fieldImageFileInput');
+      if (input) input.value = '';
+      updateImagePreview('');
+    }
+
     function chooseSampleImage() {
       const samples = [
         'https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80',
@@ -979,6 +1151,7 @@
       ];
       const random = samples[Math.floor(Math.random() * samples.length)];
       document.getElementById('fieldImagemUrl').value = random;
+      updateImagePreview(random, 'Exemplo de Imagem', 'Unsplash HD');
     }
 
     function verifyTitleSEO() {
