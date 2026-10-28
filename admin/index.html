@@ -608,21 +608,58 @@
     }
 
     // Inicialização do Supabase Client
-    function initSupabaseConnection() {
-      const url = localStorage.getItem('dn_supabase_url');
-      const key = localStorage.getItem('dn_supabase_key');
+    async function initSupabaseConnection() {
+      const defaultUrl = 'https://wxlzwccoitbzpisitdqe.supabase.co';
+      const defaultKey = 'sb_publishable_1zm8d88ZJ7DvLKFNZ_jG_g_J5Q8sCKO';
 
-      const badge = document.getElementById('supabaseStatusBadge');
+      const url = localStorage.getItem('dn_supabase_url') || defaultUrl;
+      const key = localStorage.getItem('dn_supabase_key') || defaultKey;
+
+      localStorage.setItem('dn_supabase_url', url);
+      localStorage.setItem('dn_supabase_key', key);
+
       const dot = document.getElementById('supabaseStatusDot');
       const text = document.getElementById('supabaseStatusText');
+      const noticeBox = document.getElementById('supabaseNoticeBox');
 
       if (url && key && window.supabase) {
         try {
           supabaseClient = window.supabase.createClient(url, key);
-          isConnectedToSupabase = true;
-          dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
-          text.textContent = 'Supabase Conectado';
-          document.getElementById('supabaseNoticeBox')?.classList.add('hidden');
+          
+          // Testar se a tabela noticias já foi criada no Supabase
+          const { data, error } = await supabaseClient.from('noticias').select('id').limit(1);
+
+          if (error && error.code === 'PGRST205') {
+            // Tabela ainda não foi criada via SQL Editor
+            isConnectedToSupabase = true;
+            dot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+            text.textContent = 'Supabase Conectado (Execute o SQL)';
+            if (noticeBox) {
+              noticeBox.classList.remove('hidden');
+              noticeBox.innerHTML = `
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-lg bg-amber-500/20 text-amber-400 font-black flex items-center justify-center text-xl shrink-0">
+                    ⚠️
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-sm text-slate-100">Chaves do Supabase Conectadas com Sucesso!</h4>
+                    <p class="text-xs text-slate-400">Falta apenas 1 passo: execute o arquivo <code class="text-cyan-300 font-mono font-bold">supabase-setup.sql</code> no seu <strong>SQL Editor</strong> do Supabase para criar as tabelas.</p>
+                  </div>
+                </div>
+                <a href="../supabase-setup.sql" download class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg text-xs transition shrink-0 shadow">
+                  Baixar supabase-setup.sql
+                </a>
+              `;
+            }
+          } else if (!error) {
+            // Tabela existe e está 100% pronta!
+            isConnectedToSupabase = true;
+            dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+            text.textContent = 'Supabase Nuvem Ativa ✓';
+            if (noticeBox) noticeBox.classList.add('hidden');
+          } else {
+            fallbackToLocal();
+          }
         } catch (e) {
           console.error('Erro ao conectar com Supabase:', e);
           fallbackToLocal();
@@ -1010,3 +1047,4 @@
   </script>
 </body>
 </html>
+

@@ -202,3 +202,4 @@ WITH CHECK (true);
 -- Project URL (ex: https://xyz.supabase.co) e Anon Key
 -- e colar nas configurações do seu painel em /admin
 -- ==============================================================================
+

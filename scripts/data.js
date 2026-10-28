@@ -1,16 +1,24 @@
 /**
- * DIÁRIO NACIONAL - REPOSITÓRIO CENTRAL DE DADOS & STORAGE
- * Gerencia notícias, colunistas, enquetes e comentários com sincronização via LocalStorage.
+ * GIRO 360 - REPOSITÓRIO CENTRAL DE DADOS & SINCRONIZAÇÃO SUPABASE
+ * Conecta com o Supabase oficial e mantém sincronização com o LocalStorage.
  */
 
 const STORAGE_KEYS = {
   NEWS: 'dn_news_database',
   POLL: 'dn_poll_data',
   THEME: 'dn_theme_preference',
-  FONT_SCALE: 'dn_font_scale'
+  FONT_SCALE: 'dn_font_scale',
+  SUPABASE_URL: 'dn_supabase_url',
+  SUPABASE_KEY: 'dn_supabase_key'
 };
 
-// Base inicial de matérias jornalísticas completas
+// Configurações padrão do Supabase oficial
+const DEFAULT_SUPABASE = {
+  url: 'https://wxlzwccoitbzpisitdqe.supabase.co',
+  key: 'sb_publishable_1zm8d88ZJ7DvLKFNZ_jG_g_J5Q8sCKO'
+};
+
+// Base inicial de matérias de contingência (fallback offline)
 const initialNews = [
   {
     id: 1,
@@ -30,7 +38,6 @@ const initialNews = [
       <p>O Produto Interno Bruto (PIB) do Brasil registrou expansão contínua no último trimestre, surpreendendo os principais organismos multilaterais e bancos de investimento. A combinação entre consumo interno resiliente, queda estrutural nas taxas de juros e a atração de capital internacional para projetos de transição energética consolidou o novo ciclo de desenvolvimento.</p>
       <blockquote>“Estamos colhendo os frutos de um equilíbrio fiscal somado a políticas assertivas de crédito e inovação produtiva. O país não apenas cresce em números brutos, mas gera empregos qualificados em todas as cinco regiões”, destacou a equipe econômica em comunicado oficial.</blockquote>
       <p>De acordo com o Ministério da Fazenda, a modernização dos incentivos para a indústria nacional e a desburocratização trazida pela nova etapa da reforma tributária proporcionaram um ambiente de previsibilidade sem precedentes para os próximos anos fiscais.</p>
-      <p>O agronegócio tecnológico e a indústria automobilística elétrica responderam por mais de 40% das novas contratações no período, apontando para uma diversificação saudável da matriz de exportações brasileira.</p>
     `,
     comments: [
       { id: 101, author: "Marcos Vinicius", time: "Há 40 minutos", text: "Excelente ver a indústria nacional voltando a ter relevância e gerando empregos de qualidade." },
@@ -54,7 +61,6 @@ const initialNews = [
     content: `
       <p>Líderes partidários no Senado chegaram a um consenso para colocar em votação o relatório final da reforma administrativa. A matéria propõe critérios transparentes de avaliação de desempenho, premiação por produtividade e corte rigoroso de despesas operacionais redundantes.</p>
       <p>O relator enfatizou que os direitos adquiridos dos atuais servidores serão integralmente preservados, criando regras de transição equilibradas para os novos ingressantes através de concursos públicos altamente técnicos.</p>
-      <p>A votação deve ocorrer em dois turnos ao longo das próximas semanas, prometendo destravar economias orçamentárias expressivas nos âmbitos federal, estadual e municipal.</p>
     `,
     comments: [
       { id: 103, author: "Sérgio Lemos", time: "Há 2 horas", text: "A digitalização de processos desburocratiza a vida de quem mais precisa de atendimento no SUS e no INSS." }
@@ -75,9 +81,7 @@ const initialNews = [
     image: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80",
     caption: "Chip com arquitetura inovadora montado em laboratório de nanotecnologia de ponta.",
     content: `
-      <p>Uma equipe multidisciplinar de físicos e engenheiros brasileiros anunciou hoje o protótipo funcional de um processador quântico capaz de operar em temperaturas muito próximas do ambiente de laboratório tradicional, eliminando a dependência de hélio líquido superresfriado.</p>
-      <p>O avanço abre portas para que data centers e hospitais utilizem simulações quânticas complexas na descoberta de novos fármacos e na criptografia pós-quântica inviolável.</p>
-      <p>A patente já foi depositada e grandes fundos de capital de risco já manifestaram intenção de investir na produção em escala dos novos componentes.</p>
+      <p>Uma equipe multidisciplinar de físicos e engenheiros brasileiros anunciou hoje o protótipo funcional de um processador quântico capaz de operar em temperaturas muito próximas do ambiente de laboratório tradicional.</p>
     `,
     comments: [
       { id: 104, author: "Thiago Rocha", time: "Há 3 horas", text: "Orgulho imenso da ciência brasileira. Isso demonstra o potencial que temos quando há investimento contínuo!" }
@@ -98,95 +102,7 @@ const initialNews = [
     image: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80",
     caption: "Festa nas arquibancadas com mosaicos e apoio incondicional das torcidas em noite de clássico nacional.",
     content: `
-      <p>O levantamento divulgado pela Confederação Brasileira de Futebol revelou que a média de ocupação das arenas superou a marca histórica de 38 mil pagantes por partida na Série A, com destaque para a participação crescente de mulheres e crianças nos estádios.</p>
-      <p>O investimento em segurança integrada com reconhecimento facial e sistemas de transporte público dedicados após os jogos foram apontados como fatores determinantes para o sucesso das arquibancadas.</p>
-      <p>A disputa pelo título segue acirrada entre quatro clubes separados por apenas três pontos na tabela de classificação.</p>
-    `,
-    comments: []
-  },
-  {
-    id: 5,
-    title: "Festival de Cinema de Salvador premia produções autorais da América Latina no Centro Histórico",
-    subtitle: "Mais de 80 longas e curtas-metragens foram exibidos gratuitamente em praças públicas e teatros restaurados do Pelourinho e Santo Antônio.",
-    category: "entretenimento",
-    categoryLabel: "Entretenimento",
-    author: "Camila Guimarães",
-    authorRole: "Crítica Cultural • Salvador",
-    date: "28 de Outubro de 2026",
-    readTime: "3 min",
-    views: 99400,
-    isLead: false,
-    image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1200&q=80",
-    caption: "Projeção a céu aberto encanta moradores e turistas no coração cultural da capital baiana.",
-    content: `
-      <p>O 12º Festival Internacional de Cinema de Salvador encerrou sua edição mais concorrida celebrando a diversidade narrativa da América Latina. O troféu de melhor filme do júri oficial foi concedido ao drama documental 'Vozes da Maré', dirigido por uma cineasta baiana de 29 anos.</p>
-      <p>O evento movimentou a rede hoteleira, restaurantes e o comércio de artesanato, atraindo críticos renomados e celebridades internacionais para as ladeiras históricas da cidade.</p>
-      <p>Para a próxima edição, a organização confirmou ampliação do circuito para bairros da Cidade Baixa e do Subúrbio Ferroviário com oficinas de capacitação audiovisual gratuitas.</p>
-    `,
-    comments: [
-      { id: 105, author: "Beatriz Andrade", time: "Há 4 horas", text: "Salvador respira arte e cultura. Essa iniciativa valoriza o Pelourinho de forma digna e popular!" }
-    ]
-  },
-  {
-    id: 6,
-    title: "O futuro do trabalho humano diante dos novos agentes autônomos de Inteligência Artificial",
-    subtitle: "Colunista analisa por que a criatividade emocional e o pensamento crítico serão as competências mais bem remuneradas da década.",
-    category: "tecnologia",
-    categoryLabel: "Opinião",
-    author: "Mariana Rios",
-    authorRole: "Pesquisadora Sênior de Ética e IA",
-    date: "28 de Outubro de 2026",
-    readTime: "4 min",
-    views: 57200,
-    isLead: false,
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80",
-    caption: "Mariana Rios é pesquisadora sênior em ética computacional e escritora.",
-    content: `
-      <p>Ao contrário dos prenúncios alarmistas de substituição maciça, o que assistimos no mercado corporativo atual é uma simbiose entre inteligência analítica das máquinas e a sensibilidade contextual dos seres humanos.</p>
-      <p>Sistemas automatizados executam rotinas repetitivas com velocidade cirúrgica, mas continuam incapazes de negociar nuances diplomáticas, inspirar equipes desmotivadas ou conceber visões artísticas genuinamente disruptivas.</p>
-      <p>A verdadeira divisão do trabalho moderno não será entre homens e algoritmos, mas entre os profissionais que sabem comandar a tecnologia e aqueles que hesitam em compreendê-la.</p>
-    `,
-    comments: []
-  },
-  {
-    id: 7,
-    title: "Cidades inteligentes: como a mobilidade sustentável transforma o cotidiano da Bahia",
-    subtitle: "VLT, ciclovias integradas e corredores de ônibus elétricos criam novo paradigma de qualidade de vida urbana.",
-    category: "politica",
-    categoryLabel: "Opinião",
-    author: "Prof. Gilberto Assis",
-    authorRole: "Professor de Urbanismo na UFBA",
-    date: "28 de Outubro de 2026",
-    readTime: "3 min",
-    views: 43800,
-    isLead: false,
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=1200&q=80",
-    caption: "Prof. Gilberto Assis leciona Urbanismo e Sustentabilidade na UFBA.",
-    content: `
-      <p>O avanço das obras do VLT em Salvador e a integração tarifária com metrô e ônibus representam a mais profunda reparação histórica para as famílias do Subúrbio Ferroviário.</p>
-      <p>Reduzir o tempo de deslocamento diário de duas horas para 35 minutos significa devolver convívio familiar, descanso e oportunidades de estudo para os trabalhadores de periferia.</p>
-      <p>Mobilidade não é luxo de engenharia; é o mais básico e poderoso instrumento de justiça social e preservação ambiental que uma metrópole contemporânea pode abraçar.</p>
-    `,
-    comments: []
-  },
-  {
-    id: 8,
-    title: "Educação financeira familiar: o escudo indispensável contra as oscilações da inflação",
-    subtitle: "Estratégias práticas e acessíveis para famílias construírem reservas de emergência e protegerem o poder de compra.",
-    category: "economia",
-    categoryLabel: "Opinião",
-    author: "Helena Castelo",
-    authorRole: "Consultora Financeira e Apresentadora",
-    date: "28 de Outubro de 2026",
-    readTime: "3 min",
-    views: 40500,
-    isLead: false,
-    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=80",
-    caption: "Helena Castelo é consultora financeira e apresentadora de podcast econômico.",
-    content: `
-      <p>Conversar sobre finanças à mesa de jantar ainda é um tabu para milhares de lares brasileiros. No entanto, em tempos de dinamismo econômico, a ignorância orçamentária custa caro.</p>
-      <p>Pequenos hábitos diários, como o mapeamento sistemático de despesas invisíveis por meio de aplicativos simples e o hábito de poupar 5% da renda antes dos gastos, têm o poder de transformar vidas.</p>
-      <p>O segredo da prosperidade duradoura nunca esteve nos ganhos milagrosos da especulação, mas sim na disciplina constante e no consumo consciente.</p>
+      <p>O levantamento divulgado pela CBF revelou que a média de ocupação das arenas superou a marca histórica de 38 mil pagantes por partida na Série A.</p>
     `,
     comments: []
   }
@@ -220,8 +136,64 @@ const columnistsDatabase = [
   }
 ];
 
-// FUNÇÕES DE ACESSO E PERSISTÊNCIA
+// Inicialização do cliente Supabase global
+function getSupabaseClient() {
+  if (typeof window !== 'undefined' && window.supabaseClient) {
+    return window.supabaseClient;
+  }
+  const url = (typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEYS.SUPABASE_URL)) || DEFAULT_SUPABASE.url;
+  const key = (typeof localStorage !== 'undefined' && localStorage.getItem(STORAGE_KEYS.SUPABASE_KEY)) || DEFAULT_SUPABASE.key;
 
+  if (typeof window !== 'undefined' && window.supabase && window.supabase.createClient) {
+    try {
+      window.supabaseClient = window.supabase.createClient(url, key);
+      return window.supabaseClient;
+    } catch (e) {
+      console.warn('Erro ao inicializar Supabase:', e);
+    }
+  }
+  return null;
+}
+
+// SINCRONIZAÇÃO ASSÍNCRONA COM O SUPABASE
+async function syncNewsFromSupabase() {
+  const sb = getSupabaseClient();
+  if (!sb) return null;
+
+  try {
+    const { data, error } = await sb
+      .from('noticias')
+      .select('*')
+      .order('id', { ascending: false });
+
+    if (!error && data && data.length > 0) {
+      // Normalizar campos para compatibilidade com a interface
+      const normalized = data.map(item => ({
+        ...item,
+        title: item.titulo || item.title,
+        subtitle: item.descricao_seo || item.subtitle,
+        category: (item.categoria || item.category || 'geral').toLowerCase(),
+        categoryLabel: item.categoria || item.categoryLabel || 'Geral',
+        author: item.autor || item.author || 'Redação',
+        date: item.data_publicacao || item.date || 'Hoje',
+        readTime: item.tempo_leitura || item.readTime || '3 min',
+        image: item.imagem_url || item.image,
+        caption: item.legenda_imagem || item.caption,
+        content: item.conteudo || item.content,
+        views: item.visualizacoes || item.views || 0,
+        comments: item.comments || []
+      }));
+
+      localStorage.setItem(STORAGE_KEYS.NEWS, JSON.stringify(normalized));
+      return normalized;
+    }
+  } catch (err) {
+    console.warn('Supabase offline ou tabela noticias ainda não criada. Usando dados locais.', err);
+  }
+  return null;
+}
+
+// OBTENÇÃO DE NOTÍCIAS (Síncrono para render imediato do LocalStorage + Sync em background)
 function getAllNews() {
   const saved = localStorage.getItem(STORAGE_KEYS.NEWS);
   if (!saved) {
@@ -237,56 +209,116 @@ function getAllNews() {
 
 function getNewsById(id) {
   const all = getAllNews();
-  return all.find(item => item.id === parseInt(id, 10));
+  return all.find(item => item.id == id);
 }
 
-function saveNewsArticle(articleData) {
+// SALVAR NOTÍCIA (Supabase + LocalStorage)
+async function saveNewsArticle(articleData) {
   const all = getAllNews();
+  const sb = getSupabaseClient();
+
+  // 1. Tentar salvar no Supabase
+  if (sb) {
+    try {
+      const payload = {
+        titulo: articleData.titulo || articleData.title,
+        titulo_seo: articleData.titulo_seo || articleData.titulo || articleData.title,
+        descricao_seo: articleData.descricao_seo || articleData.subtitle || '',
+        palavras_chave: articleData.palavras_chave || '',
+        categoria: articleData.categoria || articleData.categoryLabel || 'Geral',
+        categoria_slug: (articleData.categoria || articleData.category || 'geral').toLowerCase(),
+        autor: articleData.autor || articleData.author || 'Redação Giro 360',
+        tempo_leitura: articleData.tempo_leitura || articleData.readTime || '3 min',
+        imagem_url: articleData.imagem_url || articleData.image,
+        legenda_imagem: articleData.legenda_imagem || articleData.caption || '',
+        conteudo: articleData.conteudo || articleData.content,
+        data_publicacao: articleData.data_publicacao || articleData.date || new Date().toISOString().split('T')[0]
+      };
+
+      if (articleData.id) {
+        await sb.from('noticias').update(payload).eq('id', articleData.id);
+      } else {
+        const { data } = await sb.from('noticias').insert([payload]).select();
+        if (data && data[0]) {
+          articleData.id = data[0].id;
+        }
+      }
+    } catch (err) {
+      console.warn('Não foi possível salvar no Supabase neste momento. Salvo localmente.', err);
+    }
+  }
+
+  // 2. Salvar no LocalStorage para render imediato
   if (articleData.id) {
-    const idx = all.findIndex(a => a.id === articleData.id);
+    const idx = all.findIndex(a => a.id == articleData.id);
     if (idx !== -1) {
       all[idx] = { ...all[idx], ...articleData };
+    } else {
+      all.unshift(articleData);
     }
   } else {
-    const newId = all.length > 0 ? Math.max(...all.map(a => a.id)) + 1 : 1;
-    const newArticle = {
-      ...articleData,
-      id: newId,
-      views: 0,
-      comments: []
-    };
-    all.unshift(newArticle);
+    const newId = all.length > 0 ? Math.max(...all.map(a => Number(a.id) || 0)) + 1 : 1;
+    articleData.id = newId;
+    articleData.views = 0;
+    articleData.comments = [];
+    all.unshift(articleData);
   }
+
   localStorage.setItem(STORAGE_KEYS.NEWS, JSON.stringify(all));
   return all;
 }
 
-function deleteNewsArticle(id) {
+// EXCLUIR NOTÍCIA (Supabase + LocalStorage)
+async function deleteNewsArticle(id) {
+  const sb = getSupabaseClient();
+  if (sb) {
+    try {
+      await sb.from('noticias').delete().eq('id', id);
+    } catch (e) {
+      console.warn('Erro ao deletar do Supabase:', e);
+    }
+  }
+
   let all = getAllNews();
-  all = all.filter(a => a.id !== parseInt(id, 10));
+  all = all.filter(a => a.id != id);
   localStorage.setItem(STORAGE_KEYS.NEWS, JSON.stringify(all));
   return all;
 }
 
-function addCommentToArticle(articleId, author, text) {
-  const all = getAllNews();
-  const article = all.find(a => a.id === parseInt(articleId, 10));
-  if (!article) return null;
-
-  if (!article.comments) article.comments = [];
+// ADICIONAR COMENTÁRIO
+async function addCommentToArticle(articleId, author, text) {
+  const sb = getSupabaseClient();
   const newComment = {
     id: Date.now(),
     author: author,
     time: "Agora mesmo",
     text: text
   };
-  article.comments.unshift(newComment);
-  localStorage.setItem(STORAGE_KEYS.NEWS, JSON.stringify(all));
+
+  if (sb) {
+    try {
+      await sb.from('comentarios').insert([{
+        noticia_id: articleId,
+        autor: author,
+        texto: text
+      }]);
+    } catch (e) {
+      console.warn('Erro ao salvar comentário no Supabase:', e);
+    }
+  }
+
+  const all = getAllNews();
+  const article = all.find(a => a.id == articleId);
+  if (article) {
+    if (!article.comments) article.comments = [];
+    article.comments.unshift(newComment);
+    localStorage.setItem(STORAGE_KEYS.NEWS, JSON.stringify(all));
+  }
   return newComment;
 }
 
 function getCategoryColor(cat) {
-  switch(cat) {
+  switch(cat ? cat.toLowerCase() : '') {
     case 'politica': return 'bg-blue-600';
     case 'economia': return 'bg-emerald-600';
     case 'tecnologia': return 'bg-indigo-600';
@@ -296,3 +328,7 @@ function getCategoryColor(cat) {
   }
 }
 
+// Auto-sync ao carregar
+if (typeof window !== 'undefined') {
+  syncNewsFromSupabase().catch(() => {});
+}
